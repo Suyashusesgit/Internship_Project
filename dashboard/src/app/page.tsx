@@ -28,7 +28,7 @@ const KNOWN_DEVICES = ["tbtn-001"];
 
 export default function LiveDashboard() {
   const [deviceId, setDeviceId] = useState(KNOWN_DEVICES[0]);
-  const { latest, trend5min, loading, error, secondsAgo, isDemo } = useLiveReading(deviceId);
+  const { latest, trend5min, loading, error, secondsAgo } = useLiveReading(deviceId);
 
   const isStale = secondsAgo !== null && secondsAgo > 120;
 
@@ -44,8 +44,6 @@ export default function LiveDashboard() {
 
   return (
     <div className="animate-fade-in">
-      {/* Demo mode banner */}
-      {isDemo && <DemoBanner />}
       {/* Page header */}
       <div style={styles.pageHeader}>
         <div>
@@ -240,38 +238,6 @@ function DropletIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
     </svg>
-  );
-}
-
-/* ---- Demo Mode Banner ---- */
-function DemoBanner() {
-  return (
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      gap: "var(--space-3)",
-      padding: "var(--space-3) var(--space-5)",
-      marginBottom: "var(--space-5)",
-      background: "linear-gradient(135deg, rgba(139,92,246,0.12), rgba(59,130,246,0.10))",
-      border: "1px solid rgba(139,92,246,0.35)",
-      borderRadius: "var(--radius-md)",
-      color: "var(--text-secondary)",
-      fontSize: "0.82rem",
-      lineHeight: 1.55,
-    }}>
-      <span style={{ fontSize: "1.2rem" }}>🧪</span>
-      <span>
-        <strong style={{ color: "var(--text-primary)" }}>Demo Mode</strong>
-        {" — "}
-        No Firebase credentials detected. Showing{" "}
-        <strong style={{ color: "rgba(139,92,246,0.9)" }}>synthetic sample data</strong>{" "}
-        so you can explore the full UI. To use real data, copy{" "}
-        <code style={{ background: "rgba(255,255,255,0.07)", padding: "1px 5px", borderRadius: 4 }}>.env.local.example</code>{" "}
-        to{" "}
-        <code style={{ background: "rgba(255,255,255,0.07)", padding: "1px 5px", borderRadius: 4 }}>.env.local</code>{" "}
-        and fill in your Firebase config.
-      </span>
-    </div>
   );
 }
 

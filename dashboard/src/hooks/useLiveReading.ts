@@ -13,11 +13,6 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Reading } from "@/types/reading";
-import {
-  isDemoMode,
-  getLatestSampleReading,
-  getTrend5minSampleReading,
-} from "@/lib/sampleData";
 
 export interface LiveReadingState {
   latest: Reading | null;
@@ -25,7 +20,6 @@ export interface LiveReadingState {
   loading: boolean;
   error: string | null;
   secondsAgo: number | null; // seconds since last reading arrived
-  isDemo: boolean; // true when using local sample data
 }
 
 function docToReading(doc: DocumentData & { id: string }): Reading {
@@ -46,65 +40,18 @@ function docToReading(doc: DocumentData & { id: string }): Reading {
  * Subscribes to the most recent 25 readings for a device via onSnapshot.
  * The first document is "latest"; we search within the set for the reading
  * closest to 5 minutes ago for trend arrows.
- *
- * When Firebase credentials are missing (demo mode), returns realistic
- * synthetic readings so the dashboard can be explored locally.
  */
 export function useLiveReading(deviceId: string): LiveReadingState {
-  const demo = isDemoMode();
-
   const [state, setState] = useState<LiveReadingState>({
     latest: null,
     trend5min: null,
     loading: true,
     error: null,
     secondsAgo: null,
-    isDemo: demo,
   });
 
-  // ── Demo mode: return sample data immediately, tick secondsAgo ──────────
+  // Tick secondsAgo every second
   useEffect(() => {
-    if (!demo) return;
-
-    const latest = getLatestSampleReading();
-    const trend5min = getTrend5minSampleReading();
-
-    // Pretend the latest reading just arrived
-    const fakeLatestMs = Date.now() - 8_000; // 8 s ago
-    const patchedLatest: Reading = {
-      ...latest,
-      timestamp: {
-        ...latest.timestamp,
-        toDate: () => new Date(fakeLatestMs),
-        toMillis: () => fakeLatestMs,
-      } as Reading["timestamp"],
-    };
-
-    setState({
-      latest: patchedLatest,
-      trend5min,
-      loading: false,
-      error: null,
-      secondsAgo: 8,
-      isDemo: true,
-    });
-
-    // Tick secondsAgo every second
-    const timer = setInterval(() => {
-      setState((prev) => {
-        if (!prev.latest?.timestamp) return prev;
-        const ms = Date.now() - fakeLatestMs;
-        return { ...prev, secondsAgo: Math.floor(ms / 1000) };
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [demo]);
-
-  // ── Live mode: tick secondsAgo every second ─────────────────────────────
-  useEffect(() => {
-    if (demo) return;
     const timer = setInterval(() => {
       setState((prev) => {
         if (!prev.latest?.timestamp) return prev;
@@ -113,11 +60,10 @@ export function useLiveReading(deviceId: string): LiveReadingState {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [demo]);
+  }, []);
 
-  // ── Live mode: Firestore onSnapshot ────────────────────────────────────
   useEffect(() => {
-    if (demo || !deviceId) return;
+    if (!deviceId) return;
 
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
@@ -132,7 +78,7 @@ export function useLiveReading(deviceId: string): LiveReadingState {
       q,
       (snap: QuerySnapshot<DocumentData>) => {
         if (snap.empty) {
-          setState({ latest: null, trend5min: null, loading: false, error: null, secondsAgo: null, isDemo: false });
+          setState({ latest: null, trend5min: null, loading: false, error: null, secondsAgo: null });
           return;
         }
 
@@ -155,7 +101,7 @@ export function useLiveReading(deviceId: string): LiveReadingState {
         if (trend5min?.id === latest.id) trend5min = docs[docs.length - 1] ?? null;
 
         const secondsAgo = Math.floor((Date.now() - latestMs) / 1000);
-        setState({ latest, trend5min, loading: false, error: null, secondsAgo, isDemo: false });
+        setState({ latest, trend5min, loading: false, error: null, secondsAgo });
       },
       (err) => {
         console.error("useLiveReading error:", err);
@@ -164,7 +110,7 @@ export function useLiveReading(deviceId: string): LiveReadingState {
     );
 
     return () => unsub();
-  }, [demo, deviceId]);
+  }, [deviceId]);
 
   return state;
 }
