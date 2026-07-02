@@ -1,7 +1,17 @@
 # T-BTN Pi dependencies
-adafruit-circuitpython-mlx90614
-adafruit-blinka
-max30102
-pyserial
-pynmea2
-firebase-admin
+# -----------------------------------------------------------------------
+# Core sensor + GPIO
+adafruit-circuitpython-mlx90614   # MLX90614 infrared temperature sensor
+adafruit-blinka                   # CircuitPython compatibility layer for Pi
+adafruit-extended-bus             # ExtendedI2C — bind MLX90614 to /dev/i2c-3
+smbus2                            # Low-level I2C for MAX30102 (local driver)
+
+# GPS
+pyserial                          # UART serial for NEO-6M GPS module
+pynmea2                           # NMEA sentence parser
+
+# DSP
+numpy                             # Signal processing (moving average, peak detect)
+
+# Firebase
+firebase-admin                    # Write readings to Firestore

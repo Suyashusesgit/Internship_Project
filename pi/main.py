@@ -60,8 +60,6 @@ import logging
 
 import serial
 import pynmea2
-import board
-import busio
 import adafruit_mlx90614
 import max30100
 import numpy as np
