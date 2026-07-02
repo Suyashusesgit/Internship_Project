@@ -212,16 +212,29 @@ def compute_bpm_spo2(ir_buf: collections.deque,
     ir_ac  = ir_arr  - ir_dc
     red_ac = red_arr - red_dc
 
-    # ---- BPM via peak detection on AC-coupled IR ---------------------------
-    peaks = detect_peaks(ir_ac, PEAK_MIN_DISTANCE, PEAK_THRESHOLD_FACTOR)
-
+    # ---- BPM via autocorrelation (immune to half-rate / double-rate errors) --
+    # Autocorrelation finds the dominant period of the PPG waveform directly.
+    # The ACF peak at the true heartbeat lag is ALWAYS larger than at any
+    # sub-harmonic (e.g. 2× period), so half-rate estimates are impossible.
     bpm = None
-    if len(peaks) >= 2:
-        ibis  = np.diff(peaks) / sample_rate
-        valid = ibis[(ibis > 0.3) & (ibis < 2.0)]   # 30-200 BPM sanity gate
-        if len(valid) >= 1:
-            median_ibi = float(np.median(valid))
-            bpm = round(60.0 / median_ibi)
+    try:
+        sig = ir_ac - np.mean(ir_ac)
+        acf = np.correlate(sig, sig, mode='full')
+        acf = acf[len(acf) // 2:]          # positive lags only
+        acf /= acf[0] + 1e-10              # normalise to 1 at lag=0
+
+        # Search lags corresponding to 30–200 BPM
+        lag_min = max(1, int(sample_rate * 0.30))   # 300 ms → 200 BPM
+        lag_max = min(len(acf) - 1, int(sample_rate * 2.0))  # 2 s → 30 BPM
+
+        if lag_max > lag_min:
+            search   = acf[lag_min:lag_max]
+            best_lag = int(np.argmax(search)) + lag_min
+            candidate = round(60.0 * sample_rate / best_lag)
+            if 30 <= candidate <= 200:
+                bpm = candidate
+    except Exception:
+        pass
 
     # ---- SpO2 via ratio-of-ratios -------------------------------------------
     spo2 = None
