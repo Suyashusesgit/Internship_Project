@@ -213,26 +213,35 @@ def compute_bpm_spo2(ir_buf: collections.deque,
     red_ac = red_arr - red_dc
 
     # ---- BPM via autocorrelation (immune to half-rate / double-rate errors) --
-    # Autocorrelation finds the dominant period of the PPG waveform directly.
-    # The ACF peak at the true heartbeat lag is ALWAYS larger than at any
-    # sub-harmonic (e.g. 2× period), so half-rate estimates are impossible.
+    # The ACF of a PPG signal decreases from lag=0, then rises to a local
+    # maximum at the heartbeat period. We find that FIRST local peak, not the
+    # global maximum (which would always snap to lag_min → 200 BPM).
     bpm = None
     try:
         sig = ir_ac - np.mean(ir_ac)
         acf = np.correlate(sig, sig, mode='full')
         acf = acf[len(acf) // 2:]          # positive lags only
-        acf /= acf[0] + 1e-10              # normalise to 1 at lag=0
+        acf /= (acf[0] + 1e-10)            # normalise to 1 at lag=0
 
-        # Search lags corresponding to 30–200 BPM
-        lag_min = max(1, int(sample_rate * 0.30))   # 300 ms → 200 BPM
-        lag_max = min(len(acf) - 1, int(sample_rate * 2.0))  # 2 s → 30 BPM
+        # Valid lag range: 30–200 BPM
+        lag_min = max(2, int(sample_rate * 0.30))        # 300 ms → 200 BPM cap
+        lag_max = min(len(acf) - 2, int(sample_rate * 2.0))  # 2 s → 30 BPM floor
 
         if lag_max > lag_min:
-            search   = acf[lag_min:lag_max]
-            best_lag = int(np.argmax(search)) + lag_min
-            candidate = round(60.0 * sample_rate / best_lag)
-            if 30 <= candidate <= 200:
-                bpm = candidate
+            # Find the FIRST local peak above 10% correlation in the valid range.
+            # For a good PPG the heartbeat-period peak is well above noise.
+            best_lag = None
+            for i in range(lag_min, lag_max - 1):
+                if (acf[i] > acf[i - 1]        # rising from previous sample
+                        and acf[i] > acf[i + 1] # falling to next sample
+                        and acf[i] > 0.10):     # genuine peak, not noise floor
+                    best_lag = i
+                    break
+
+            if best_lag is not None:
+                candidate = round(60.0 * sample_rate / best_lag)
+                if 30 <= candidate <= 200:
+                    bpm = candidate
     except Exception:
         pass
 
