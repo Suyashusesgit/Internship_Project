@@ -338,6 +338,7 @@ def init_i2c_sensors():
         led_current_red=DEFAULT_LED_CURRENT,
         led_current_ir=DEFAULT_LED_CURRENT,
         pulse_width=max30100.PULSE_WIDTH_1600US_ADC_16,
+        max_buffer_len=WINDOW_SIZE,
     )
     ox.enable_spo2()
     log.info("MAX30102 initialised at 0x57 on bus 1 (default)")
@@ -399,8 +400,6 @@ def main():
         gps_serial = None
 
     # ---- State variables -------------------------------------------------------
-    ir_buf  = collections.deque(maxlen=WINDOW_SIZE)
-    red_buf = collections.deque(maxlen=WINDOW_SIZE)
     bpm_smoother = BPMSmoother()
 
     body_temp = None        # °C from MLX90614
@@ -427,11 +426,6 @@ def main():
         # ------------------------------------------------------------------ #
         try:
             ox.read_sensor()
-            ir_val  = ox.ir
-            red_val = ox.red
-            if ir_val is not None and red_val is not None:
-                ir_buf.append(float(ir_val))
-                red_buf.append(float(red_val))
         except OSError as exc:
             log.debug("MAX30102 I2C error (skipping sample): %s", exc)
         except Exception as exc:
@@ -486,6 +480,9 @@ def main():
         # 4. DSP — recompute BPM & SpO2                                       #
         # ------------------------------------------------------------------ #
         try:
+            ir_buf  = list(ox.buffer_ir)
+            red_buf = list(ox.buffer_red)
+
             # ---- Contact detection: IR DC level drops when no finger ------
             no_contact = (
                 len(ir_buf) > 0
@@ -499,6 +496,8 @@ def main():
                 saturated = False
                 bpm_smoother._history.clear()
                 bpm_smoother.value = None
+                ox.buffer_ir.clear()
+                ox.buffer_red.clear()
             else:
                 raw_bpm, raw_spo2 = compute_bpm_spo2(ir_buf, red_buf, SAMPLE_RATE_HZ)
                 if raw_bpm == "SATURATED":

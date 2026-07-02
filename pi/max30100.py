@@ -289,15 +289,18 @@ class MAX30100:
 
             # Each channel is 3 bytes, MSB first; 18-bit value in the
             # low bits of the resulting 24-bit word.
-            ir_sample = (
-                ((raw[0] << 16) | (raw[1] << 8) | raw[2]) & _ADC_18BIT_MASK
-            )
-
             if self._mode == MODE_SPO2:
                 red_sample = (
+                    ((raw[0] << 16) | (raw[1] << 8) | raw[2]) & _ADC_18BIT_MASK
+                )
+                ir_sample = (
                     ((raw[3] << 16) | (raw[4] << 8) | raw[5]) & _ADC_18BIT_MASK
                 )
             else:
+                # In HR-only mode, only LED1 (IR) is active (placed in bytes 0-2)
+                ir_sample = (
+                    ((raw[0] << 16) | (raw[1] << 8) | raw[2]) & _ADC_18BIT_MASK
+                )
                 red_sample = None
 
             self.ir = ir_sample
