@@ -212,36 +212,26 @@ def compute_bpm_spo2(ir_buf: collections.deque,
     ir_ac  = ir_arr  - ir_dc
     red_ac = red_arr - red_dc
 
-    # ---- BPM via autocorrelation (immune to half-rate / double-rate errors) --
-    # The ACF of a PPG signal decreases from lag=0, then rises to a local
-    # maximum at the heartbeat period. We find that FIRST local peak, not the
-    # global maximum (which would always snap to lag_min → 200 BPM).
+    # ---- BPM via FFT — most robust approach ----------------------------------
+    # Takes the power spectrum of the AC-coupled IR signal and picks the
+    # dominant frequency in the 0.5–4 Hz band (30–240 BPM).
+    # A Hann window reduces spectral leakage from the finite-length buffer.
+    # FFT naturally handles the half-rate problem: the fundamental heartbeat
+    # frequency carries more power than its harmonics, so 1× is always chosen.
     bpm = None
     try:
-        sig = ir_ac - np.mean(ir_ac)
-        acf = np.correlate(sig, sig, mode='full')
-        acf = acf[len(acf) // 2:]          # positive lags only
-        acf /= (acf[0] + 1e-10)            # normalise to 1 at lag=0
+        n   = len(ir_ac)
+        win = np.hanning(n)                         # Hann window
+        spectrum = np.abs(np.fft.rfft(ir_ac * win))
+        freqs    = np.fft.rfftfreq(n, d=1.0 / sample_rate)   # Hz
 
-        # Valid lag range: 30–200 BPM
-        lag_min = max(2, int(sample_rate * 0.30))        # 300 ms → 200 BPM cap
-        lag_max = min(len(acf) - 2, int(sample_rate * 2.0))  # 2 s → 30 BPM floor
-
-        if lag_max > lag_min:
-            # Find the FIRST local peak above 10% correlation in the valid range.
-            # For a good PPG the heartbeat-period peak is well above noise.
-            best_lag = None
-            for i in range(lag_min, lag_max - 1):
-                if (acf[i] > acf[i - 1]        # rising from previous sample
-                        and acf[i] > acf[i + 1] # falling to next sample
-                        and acf[i] > 0.10):     # genuine peak, not noise floor
-                    best_lag = i
-                    break
-
-            if best_lag is not None:
-                candidate = round(60.0 * sample_rate / best_lag)
-                if 30 <= candidate <= 200:
-                    bpm = candidate
+        # Isolate the heartbeat band 0.5 – 4 Hz  (30 – 240 BPM)
+        mask = (freqs >= 0.5) & (freqs <= 4.0)
+        if np.any(mask):
+            peak_freq = freqs[mask][np.argmax(spectrum[mask])]
+            candidate = round(peak_freq * 60.0)
+            if 30 <= candidate <= 240:
+                bpm = candidate
     except Exception:
         pass
 
