@@ -97,12 +97,12 @@ WINDOW_SIZE    = SAMPLE_RATE_HZ * 4       # 4-second analysis window (400 sample
 MA_KERNEL      = int(SAMPLE_RATE_HZ * 1.5) # 1.5s moving-average kernel for DC baseline estimation
 
 # Peak detection
-PEAK_MIN_DISTANCE     = int(SAMPLE_RATE_HZ * 0.45)  # 450ms refractory (max ~133 BPM) to prevent 140+ spikes
-PEAK_THRESHOLD_FACTOR = 0.35                        # reliable threshold to catch all real beats
-MIN_PULSE_AMPLITUDE   = 50.0                        # reject flat 1/f noise windows
+PEAK_MIN_DISTANCE     = int(SAMPLE_RATE_HZ * 0.40)  # 400ms refractory (max ~150 BPM)
+PEAK_THRESHOLD_FACTOR = 0.25                        # very sensitive threshold for weak pulses
+MIN_PULSE_AMPLITUDE   = 3.0                         # minimum AC amplitude (3 ADC counts)
 
 # BPM smoothing / plausibility gating
-BPM_MAX_STEP    = 10      # tightened: prevents artifact spikes from registering
+BPM_MAX_STEP    = 20      # allow larger steps when locking on initially
 BPM_EMA_ALPHA   = 0.30    # smoother EMA
 
 # SpO2 calibration (tuned empirically for MAX30102 to reach 95-100% normal range)
@@ -233,11 +233,12 @@ def compute_bpm_spo2(ir_buf: collections.deque,
     # more resilient to 1/f noise drift than the FFT approach.
     bpm = None
     peaks = detect_peaks(ir_ac, PEAK_MIN_DISTANCE, PEAK_THRESHOLD_FACTOR)
+    log.debug("IR AC range=%.1f peaks=%d", float(np.max(ir_ac) - np.min(ir_ac)), len(peaks))
     if len(peaks) >= 2:
         avg_dist = np.mean(np.diff(peaks))
         if avg_dist > 0:
             candidate = round((sample_rate / avg_dist) * 60.0)
-            if 45 <= candidate <= 210:
+            if 40 <= candidate <= 220:
                 bpm = candidate
 
     # ---- SpO2 via ratio-of-ratios -------------------------------------------
@@ -548,10 +549,12 @@ def main():
             else:
                 bpm_str  = str(bpm)  if bpm  is not None else "---"
                 spo2_str = str(spo2) if spo2 is not None else "---"
+                # Debug: show raw IR DC mean to help diagnose contact
+                ir_mean = sum(list(ox.buffer_ir)) / len(ox.buffer_ir) if len(ox.buffer_ir) > 0 else 0
                 print(
                     f"Temp: {temp_str} | "
                     f"BPM: {bpm_str} (SpO2: {spo2_str}%) | "
-                    f"GPS: {gps_str}"
+                    f"GPS: {gps_str} | IR: {ir_mean:.0f}"
                 )
 
         # ------------------------------------------------------------------ #

@@ -126,7 +126,11 @@ _INT_ENB_A_FULL  = 0x80   # FIFO Almost Full
 _INT_ENB_PPG_RDY = 0x40   # New FIFO sample ready
 _INT_ENB_ALC_OVF = 0x20   # Ambient light cancellation overflow
 
-# FIFO Configuration register (0x08): no sample averaging, rollover off
+# FIFO Configuration register (0x08): no sample averaging, rollover OFF
+# With rollover OFF, when the FIFO fills the OVF counter increments and WR_PTR
+# freezes. read_sensor() detects OVF>0, resets both pointers, and fresh samples
+# begin arriving on the very next poll. This is more predictable than rollover ON
+# where WR wraps silently and avail() can compute 0 when the FIFO is actually full.
 _FIFO_CONFIG_NO_AVG_NO_ROLLOVER = 0x00
 
 # Default local rolling-buffer length kept in software
@@ -219,7 +223,8 @@ class MAX30100:
         self._write_byte(_REG_OVF_COUNTER, 0x00)
         self._write_byte(_REG_FIFO_RD_PTR, 0x00)
 
-        # FIFO config: no averaging, rollover disabled
+        # FIFO config: no averaging, rollover OFF
+        # OVF recovery in read_sensor() handles the overflow case cleanly.
         self._write_byte(_REG_FIFO_CONFIG, _FIFO_CONFIG_NO_AVG_NO_ROLLOVER)
 
         # SpO2 config: ADC range + sample rate + pulse width
@@ -275,12 +280,20 @@ class MAX30100:
         """
         wr_ptr = self._read_byte(_REG_FIFO_WR_PTR)
         rd_ptr = self._read_byte(_REG_FIFO_RD_PTR)
+        ovf    = self._read_byte(_REG_OVF_COUNTER)
         num_avail = (wr_ptr - rd_ptr) & (_FIFO_DEPTH - 1)
 
         bytes_per_sample = (
             _BYTES_PER_SAMPLE_SPO2 if self._mode == MODE_SPO2
             else _BYTES_PER_SAMPLE_HR
         )
+
+        # When the FIFO has overflowed (OVF > 0), WR_PTR has wrapped back to
+        # equal RD_PTR so the formula gives avail=0 even though FIFO is full.
+        # The OVF register is READ-ONLY — only cleared by reading samples.
+        # Force-drain all 32 slots to unblock WR_PTR and clear OVF.
+        if ovf > 0 and num_avail == 0:
+            num_avail = _FIFO_DEPTH
 
         for _ in range(num_avail):
             raw = self._read_bytes(_REG_FIFO_DATA, bytes_per_sample)
