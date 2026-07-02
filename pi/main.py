@@ -92,8 +92,8 @@ MA_KERNEL      = SAMPLE_RATE_HZ // 5      # 200ms moving-average kernel
 
 # Peak detection
 PEAK_MIN_DISTANCE     = int(SAMPLE_RATE_HZ * 0.35)  # 350ms refractory (max ~170 BPM)
-PEAK_THRESHOLD_FACTOR = 0.35                         # lowered from 0.5 — was missing
-                                                       # real beats, causing half-rate reads
+PEAK_THRESHOLD_FACTOR = 0.25                         # lowered further — 0.35 still caused
+                                                       # intermittent half-rate reads at 42 BPM
 
 # BPM smoothing / plausibility gating
 BPM_MAX_STEP    = 30      # raised: allows faster correction when initial estimate is wrong
@@ -239,29 +239,44 @@ def compute_bpm_spo2(ir_buf: collections.deque,
 
 class BPMSmoother:
     """
-    Smooths raw per-window BPM estimates with an exponential moving average
-    and a plausibility gate, so a single noisy window can't make the
-    displayed BPM jump implausibly (e.g. 90 -> 54 in one second).
+    Stabilises BPM display using a rolling median window + EMA.
+
+    Why median first?
+    The peak detector occasionally produces half-rate estimates (e.g. 42 when
+    the true BPM is ~84) when the signal amplitude dips and every other beat
+    is missed. A median over the last N estimates rejects these outliers before
+    the EMA blends them in, giving a stable reading even when individual windows
+    are noisy.
     """
+
+    MEDIAN_WINDOW = 5   # number of recent estimates to take median over
 
     def __init__(self, max_step=BPM_MAX_STEP, alpha=BPM_EMA_ALPHA):
         self.max_step = max_step
         self.alpha = alpha
-        self.value = None   # smoothed BPM (float internally, displayed rounded)
+        self.value = None           # EMA-smoothed BPM (float)
+        self._history = []          # rolling buffer of recent raw estimates
 
     def update(self, new_bpm):
-        """Feed a new raw BPM estimate (or None). Returns the smoothed BPM."""
+        """Feed a new raw BPM estimate (or None). Returns the stabilised BPM."""
         if new_bpm is None:
             return round(self.value) if self.value is not None else None
 
+        # Accumulate recent estimates for median filtering
+        self._history.append(float(new_bpm))
+        if len(self._history) > self.MEDIAN_WINDOW:
+            self._history.pop(0)
+
+        # Use median of recent window to suppress outlier half-rate estimates
+        median_bpm = sorted(self._history)[len(self._history) // 2]
+
         if self.value is None:
-            self.value = float(new_bpm)
+            self.value = median_bpm
         else:
-            # Reject implausible single-step jumps outright rather than
-            # blending them in — a 40+ BPM jump in one second is not real.
-            if abs(new_bpm - self.value) > self.max_step:
+            # Plausibility gate: ignore step too large to be physiological
+            if abs(median_bpm - self.value) > self.max_step:
                 return round(self.value)
-            self.value = (1 - self.alpha) * self.value + self.alpha * new_bpm
+            self.value = (1 - self.alpha) * self.value + self.alpha * median_bpm
 
         return round(self.value)
 
