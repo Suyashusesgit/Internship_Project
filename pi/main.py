@@ -78,8 +78,14 @@ log = logging.getLogger("T-BTN")
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-GPS_PORT    = "/dev/serial0"
-GPS_BAUD    = 9600
+
+# T-BTN GPS settings
+GPS_PORT = "/dev/serial0"
+GPS_BAUD = 9600
+
+# Cloud Settings
+PUBLISH_INTERVAL = 15.0
+DEVICE_ID = "tbtn-001"
 GPS_TIMEOUT = 0.01          # non-blocking serial timeout (seconds)
 
 POLL_INTERVAL  = 0.01       # MAX30102 polling cadence  (~100 Hz)
@@ -406,8 +412,17 @@ def main():
     gps_lon   = None        # decimal degrees
     saturated = False       # True when the MAX30102 ADC is currently clipped
 
-    t_last_print = time.monotonic()
-    t_last_mlx   = time.monotonic()
+    t_last_print   = time.monotonic()
+    t_last_mlx     = time.monotonic()
+    t_last_publish = time.monotonic()
+
+    # ---- Initialize Firebase -----------------------------------------------
+    try:
+        from firebase_client import FirebaseClient
+        firebase = FirebaseClient()
+    except Exception as exc:
+        log.warning("Failed to load Firebase Client: %s", exc)
+        firebase = None
 
     gps_line_buf = ""
 
@@ -538,6 +553,22 @@ def main():
                     f"BPM: {bpm_str} (SpO2: {spo2_str}%) | "
                     f"GPS: {gps_str}"
                 )
+
+        # ------------------------------------------------------------------ #
+        # 5.5. Publish to Cloud (Firebase)                                    #
+        # ------------------------------------------------------------------ #
+        if firebase is not None:
+            if now - t_last_publish >= PUBLISH_INTERVAL:
+                t_last_publish = now
+                data = {
+                    "deviceId": DEVICE_ID,
+                    "temp": body_temp,
+                    "bpm": bpm if not saturated else None,
+                    "spo2": spo2 if not saturated else None,
+                    "lat": gps_lat,
+                    "lon": gps_lon
+                }
+                firebase.publish_reading(data)
 
         # ------------------------------------------------------------------ #
         # 6. Sleep for the remainder of the 10ms poll slot                   #
