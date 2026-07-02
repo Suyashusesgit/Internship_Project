@@ -107,6 +107,11 @@ SPO2_B = 25.0
 ADC_MAX = 262143
 SATURATION_FRACTION_LIMIT = 0.3   # if >30% of the window is clipped, distrust it
 
+# Contact detection — IR DC level with a finger is 30,000–200,000 ADC counts
+# (even at 4.4mA LED current). Without contact it drops to ~1,000–5,000.
+# If mean IR falls below this threshold, treat it as "no finger present".
+NO_CONTACT_IR_THRESHOLD = 20000
+
 # LED current — LOW brightness is intentional. A fingertip pressed directly
 # on the sensor reflects light very efficiently; full 50mA brightness
 # saturates the ADC instantly and produces flat-lined, useless readings.
@@ -464,15 +469,29 @@ def main():
         # 4. DSP — recompute BPM & SpO2                                       #
         # ------------------------------------------------------------------ #
         try:
-            raw_bpm, raw_spo2 = compute_bpm_spo2(ir_buf, red_buf, SAMPLE_RATE_HZ)
-            if raw_bpm == "SATURATED":
-                saturated = True
-                bpm = None
-            else:
+            # ---- Contact detection: IR DC level drops when no finger ------
+            no_contact = (
+                len(ir_buf) > 0
+                and (sum(ir_buf) / len(ir_buf)) < NO_CONTACT_IR_THRESHOLD
+            )
+
+            if no_contact:
+                # No finger on sensor — clear stale readings and smoother
+                bpm  = None
+                spo2 = None
                 saturated = False
-                bpm = bpm_smoother.update(raw_bpm)
-                if raw_spo2 is not None:
-                    spo2 = raw_spo2
+                bpm_smoother._history.clear()
+                bpm_smoother.value = None
+            else:
+                raw_bpm, raw_spo2 = compute_bpm_spo2(ir_buf, red_buf, SAMPLE_RATE_HZ)
+                if raw_bpm == "SATURATED":
+                    saturated = True
+                    bpm = None
+                else:
+                    saturated = False
+                    bpm = bpm_smoother.update(raw_bpm)
+                    if raw_spo2 is not None:
+                        spo2 = raw_spo2
         except Exception as exc:
             log.warning("DSP error: %s", exc)
 
