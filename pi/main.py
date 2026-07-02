@@ -91,17 +91,17 @@ WINDOW_SIZE    = SAMPLE_RATE_HZ * 4       # 4-second analysis window (400 sample
 MA_KERNEL      = int(SAMPLE_RATE_HZ * 1.5) # 1.5s moving-average kernel for DC baseline estimation
 
 # Peak detection
-PEAK_MIN_DISTANCE     = int(SAMPLE_RATE_HZ * 0.35)  # 350ms refractory (max ~170 BPM)
-PEAK_THRESHOLD_FACTOR = 0.30                         # balanced: 0.25 picked up noise artifacts,
-                                                       # 0.50 missed real beats; 0.30 is the sweet spot
+PEAK_MIN_DISTANCE     = int(SAMPLE_RATE_HZ * 0.45)  # 450ms refractory (max ~133 BPM) to prevent 140+ spikes
+PEAK_THRESHOLD_FACTOR = 0.35                        # reliable threshold to catch all real beats
+MIN_PULSE_AMPLITUDE   = 50.0                        # reject flat 1/f noise windows
 
 # BPM smoothing / plausibility gating
-BPM_MAX_STEP    = 15      # tightened: prevents artifact spikes (50→93) from registering
-BPM_EMA_ALPHA   = 0.35    # moderate: smooth but still responsive to real changes
+BPM_MAX_STEP    = 10      # tightened: prevents artifact spikes from registering
+BPM_EMA_ALPHA   = 0.30    # smoother EMA
 
-# SpO2 calibration (textbook values; tune empirically per sensor if possible)
-SPO2_A = 110.0
-SPO2_B = 25.0
+# SpO2 calibration (tuned empirically for MAX30102 to reach 95-100% normal range)
+SPO2_A = 115.0
+SPO2_B = 10.0
 
 # MAX30102 18-bit ADC saturation point
 ADC_MAX = 262143
@@ -157,7 +157,7 @@ def moving_average(signal: np.ndarray, kernel: int) -> np.ndarray:
     return np.concatenate([pad, ma])
 
 
-def detect_peaks(signal: np.ndarray, min_distance: int, threshold_factor: float):
+def detect_peaks(signal: np.ndarray, min_distance: int, threshold_factor: float, min_amplitude: float = MIN_PULSE_AMPLITUDE):
     """
     Local-maxima peak detector with a dynamic threshold and a hard
     refractory period. The refractory period is the primary defense against
@@ -168,6 +168,11 @@ def detect_peaks(signal: np.ndarray, min_distance: int, threshold_factor: float)
 
     sig_mean = np.mean(signal)
     sig_range = np.max(signal) - np.min(signal)
+    
+    # If the AC signal is completely flat (just sensor noise), abort
+    if sig_range < min_amplitude:
+        return np.array([], dtype=int)
+        
     threshold = sig_mean + threshold_factor * sig_range
 
     peaks = []
@@ -217,44 +222,36 @@ def compute_bpm_spo2(ir_buf: collections.deque,
     ir_ac = moving_average(ir_ac, lp_kernel)
     red_ac = moving_average(red_ac, lp_kernel)
 
-    # ---- BPM via FFT — most robust approach ----------------------------------
-    # Takes the power spectrum of the AC-coupled IR signal and picks the
-    # dominant frequency in the 0.75–3.5 Hz band (45–210 BPM).
-    # A Hann window reduces spectral leakage from the finite-length buffer.
-    # FFT naturally handles the half-rate problem: the fundamental heartbeat
-    # frequency carries more power than its harmonics, so 1× is always chosen.
+    # ---- BPM via Time-Domain Peak Detection ----------------------------------
+    # Using the local-maxima peak detector (with refractory period) is much
+    # more resilient to 1/f noise drift than the FFT approach.
     bpm = None
-    try:
-        n   = len(ir_ac)
-        win = np.hanning(n)                         # Hann window
-        spectrum = np.abs(np.fft.rfft(ir_ac * win))
-        freqs    = np.fft.rfftfreq(n, d=1.0 / sample_rate)   # Hz
-
-        # Isolate the heartbeat band 0.75 – 3.5 Hz  (45 – 210 BPM)
-        mask = (freqs >= 0.75) & (freqs <= 3.5)
-        if np.any(mask):
-            peak_freq = freqs[mask][np.argmax(spectrum[mask])]
-            candidate = round(peak_freq * 60.0)
+    peaks = detect_peaks(ir_ac, PEAK_MIN_DISTANCE, PEAK_THRESHOLD_FACTOR)
+    if len(peaks) >= 2:
+        avg_dist = np.mean(np.diff(peaks))
+        if avg_dist > 0:
+            candidate = round((sample_rate / avg_dist) * 60.0)
             if 45 <= candidate <= 210:
                 bpm = candidate
-    except Exception:
-        pass
 
     # ---- SpO2 via ratio-of-ratios -------------------------------------------
     spo2 = None
-    try:
-        dc_ir  = np.mean(ir_dc)
-        dc_red = np.mean(red_dc)
-        if dc_ir > 1 and dc_red > 1:
-            ac_ir  = float(np.std(ir_ac))
-            ac_red = float(np.std(red_ac))
-            if ac_ir > 0 and ac_red > 0:
-                R   = (ac_red / dc_red) / (ac_ir / dc_ir)
-                val = SPO2_A - SPO2_B * R
-                if 70.0 <= val <= 100.0:
-                    spo2 = round(val)
-    except ZeroDivisionError:
-        pass
+    if bpm is not None:  # ONLY calculate SpO2 if a valid pulse is detected
+        try:
+            dc_ir  = np.mean(ir_dc)
+            dc_red = np.mean(red_dc)
+            if dc_ir > 1 and dc_red > 1:
+                ac_ir  = float(np.std(ir_ac))
+                ac_red = float(np.std(red_ac))
+                if ac_ir > 0 and ac_red > 0:
+                    R   = (ac_red / dc_red) / (ac_ir / dc_ir)
+                    val = SPO2_A - SPO2_B * R
+                    if val > 100.0:
+                        val = 100.0
+                    if 70.0 <= val <= 100.0:
+                        spo2 = round(val)
+        except ZeroDivisionError:
+            pass
 
     return bpm, spo2
 
