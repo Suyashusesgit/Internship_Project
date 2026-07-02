@@ -88,7 +88,7 @@ MLX_INTERVAL   = 0.5        # MLX90614 read cadence      (2 Hz)
 
 SAMPLE_RATE_HZ = int(1 / POLL_INTERVAL)   # nominal ~100
 WINDOW_SIZE    = SAMPLE_RATE_HZ * 4       # 4-second analysis window (400 samples)
-MA_KERNEL      = SAMPLE_RATE_HZ // 5      # 200ms moving-average kernel
+MA_KERNEL      = int(SAMPLE_RATE_HZ * 1.5) # 1.5s moving-average kernel for DC baseline estimation
 
 # Peak detection
 PEAK_MIN_DISTANCE     = int(SAMPLE_RATE_HZ * 0.35)  # 350ms refractory (max ~170 BPM)
@@ -212,9 +212,14 @@ def compute_bpm_spo2(ir_buf: collections.deque,
     ir_ac  = ir_arr  - ir_dc
     red_ac = red_arr - red_dc
 
+    # Low-pass filter the AC signal to remove high-frequency noise (e.g., 80ms window)
+    lp_kernel = max(1, int(sample_rate * 0.08))
+    ir_ac = moving_average(ir_ac, lp_kernel)
+    red_ac = moving_average(red_ac, lp_kernel)
+
     # ---- BPM via FFT — most robust approach ----------------------------------
     # Takes the power spectrum of the AC-coupled IR signal and picks the
-    # dominant frequency in the 0.5–4 Hz band (30–240 BPM).
+    # dominant frequency in the 0.75–3.5 Hz band (45–210 BPM).
     # A Hann window reduces spectral leakage from the finite-length buffer.
     # FFT naturally handles the half-rate problem: the fundamental heartbeat
     # frequency carries more power than its harmonics, so 1× is always chosen.
@@ -225,12 +230,12 @@ def compute_bpm_spo2(ir_buf: collections.deque,
         spectrum = np.abs(np.fft.rfft(ir_ac * win))
         freqs    = np.fft.rfftfreq(n, d=1.0 / sample_rate)   # Hz
 
-        # Isolate the heartbeat band 0.5 – 4 Hz  (30 – 240 BPM)
-        mask = (freqs >= 0.5) & (freqs <= 4.0)
+        # Isolate the heartbeat band 0.75 – 3.5 Hz  (45 – 210 BPM)
+        mask = (freqs >= 0.75) & (freqs <= 3.5)
         if np.any(mask):
             peak_freq = freqs[mask][np.argmax(spectrum[mask])]
             candidate = round(peak_freq * 60.0)
-            if 30 <= candidate <= 240:
+            if 45 <= candidate <= 210:
                 bpm = candidate
     except Exception:
         pass
