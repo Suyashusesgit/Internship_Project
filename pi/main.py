@@ -91,13 +91,13 @@ WINDOW_SIZE    = SAMPLE_RATE_HZ * 4       # 4-second analysis window (400 sample
 MA_KERNEL      = SAMPLE_RATE_HZ // 5      # 200ms moving-average kernel
 
 # Peak detection
-PEAK_MIN_DISTANCE     = int(SAMPLE_RATE_HZ * 0.4)   # 400ms refractory (max 150 BPM)
-PEAK_THRESHOLD_FACTOR = 0.5                          # stricter than 0.4 to reject
-                                                       # dicrotic-notch double-counts
+PEAK_MIN_DISTANCE     = int(SAMPLE_RATE_HZ * 0.35)  # 350ms refractory (max ~170 BPM)
+PEAK_THRESHOLD_FACTOR = 0.35                         # lowered from 0.5 — was missing
+                                                       # real beats, causing half-rate reads
 
 # BPM smoothing / plausibility gating
-BPM_MAX_STEP    = 20      # max allowed change between consecutive accepted BPM values
-BPM_EMA_ALPHA   = 0.3     # exponential moving average weight for new estimates
+BPM_MAX_STEP    = 30      # raised: allows faster correction when initial estimate is wrong
+BPM_EMA_ALPHA   = 0.5     # raised: respond faster to real BPM changes
 
 # SpO2 calibration (textbook values; tune empirically per sensor if possible)
 SPO2_A = 110.0
