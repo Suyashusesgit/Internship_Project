@@ -1,0 +1,7 @@
+# T-BTN Pi dependencies
+adafruit-circuitpython-mlx90614
+adafruit-blinka
+max30102
+pyserial
+pynmea2
+firebase-admin
