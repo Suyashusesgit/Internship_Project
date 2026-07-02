@@ -92,12 +92,12 @@ MA_KERNEL      = SAMPLE_RATE_HZ // 5      # 200ms moving-average kernel
 
 # Peak detection
 PEAK_MIN_DISTANCE     = int(SAMPLE_RATE_HZ * 0.35)  # 350ms refractory (max ~170 BPM)
-PEAK_THRESHOLD_FACTOR = 0.25                         # lowered further — 0.35 still caused
-                                                       # intermittent half-rate reads at 42 BPM
+PEAK_THRESHOLD_FACTOR = 0.30                         # balanced: 0.25 picked up noise artifacts,
+                                                       # 0.50 missed real beats; 0.30 is the sweet spot
 
 # BPM smoothing / plausibility gating
-BPM_MAX_STEP    = 30      # raised: allows faster correction when initial estimate is wrong
-BPM_EMA_ALPHA   = 0.5     # raised: respond faster to real BPM changes
+BPM_MAX_STEP    = 15      # tightened: prevents artifact spikes (50→93) from registering
+BPM_EMA_ALPHA   = 0.35    # moderate: smooth but still responsive to real changes
 
 # SpO2 calibration (textbook values; tune empirically per sensor if possible)
 SPO2_A = 110.0
@@ -249,7 +249,7 @@ class BPMSmoother:
     are noisy.
     """
 
-    MEDIAN_WINDOW = 5   # number of recent estimates to take median over
+    MEDIAN_WINDOW = 9   # wider window = more stable against spike artifacts
 
     def __init__(self, max_step=BPM_MAX_STEP, alpha=BPM_EMA_ALPHA):
         self.max_step = max_step
