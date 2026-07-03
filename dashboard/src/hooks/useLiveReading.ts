@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import {
   collection,
   query,
-  where,
   orderBy,
   limit,
   onSnapshot,
@@ -69,20 +68,22 @@ export function useLiveReading(deviceId: string): LiveReadingState {
 
     const q = query(
       collection(db, "readings"),
-      where("deviceId", "==", deviceId),
       orderBy("timestamp", "desc"),
-      limit(25) // ~6 minutes at 15s resolution — enough for trend
+      limit(100) // Fetch more to allow client-side filtering by deviceId
     );
 
     const unsub = onSnapshot(
       q,
       (snap: QuerySnapshot<DocumentData>) => {
-        if (snap.empty) {
+        const docs = snap.docs
+          .map((d) => docToReading(d as unknown as DocumentData & { id: string }))
+          .filter((d) => d.deviceId === deviceId);
+
+        if (docs.length === 0) {
           setState({ latest: null, trend5min: null, loading: false, error: null, secondsAgo: null });
           return;
         }
 
-        const docs = snap.docs.map((d) => docToReading(d as unknown as DocumentData & { id: string }));
         const latest = docs[0];
         const latestMs = latest.timestamp.toDate().getTime();
         const fiveMinMs = 5 * 60 * 1000;
@@ -98,7 +99,7 @@ export function useLiveReading(deviceId: string): LiveReadingState {
           }
         }
         // Don't use same document as trend baseline
-        if (trend5min?.id === latest.id) trend5min = docs[docs.length - 1] ?? null;
+        if (trend5min?.id === latest.id) trend5min = docs.length > 1 ? docs[docs.length - 1] : null;
 
         const secondsAgo = Math.floor((Date.now() - latestMs) / 1000);
         setState({ latest, trend5min, loading: false, error: null, secondsAgo });
