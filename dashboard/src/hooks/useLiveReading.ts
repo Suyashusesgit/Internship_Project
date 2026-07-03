@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import {
   collection,
   query,
+  where,
   orderBy,
   limit,
   onSnapshot,
@@ -37,6 +38,7 @@ function docToReading(doc: DocumentData & { id: string }): Reading {
 
 /**
  * Subscribes to the most recent 25 readings for a device via onSnapshot.
+ * P2 FIX: deviceId filter is pushed to Firestore (not done in JS).
  * The first document is "latest"; we search within the set for the reading
  * closest to 5 minutes ago for trend arrows.
  */
@@ -49,8 +51,9 @@ export function useLiveReading(deviceId: string): LiveReadingState {
     secondsAgo: null,
   });
 
-  // Tick secondsAgo every second
+  // P9 FIX: Only tick when there is an actual latest reading with a timestamp
   useEffect(() => {
+    if (!state.latest?.timestamp) return;
     const timer = setInterval(() => {
       setState((prev) => {
         if (!prev.latest?.timestamp) return prev;
@@ -59,25 +62,27 @@ export function useLiveReading(deviceId: string): LiveReadingState {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [state.latest?.timestamp]);  // only re-run when the timestamp actually changes
 
   useEffect(() => {
     if (!deviceId) return;
 
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
+    // P2 FIX: Push deviceId filter to Firestore — don't fetch all devices and filter in JS
     const q = query(
       collection(db, "readings"),
+      where("deviceId", "==", deviceId),   // server-side filter
       orderBy("timestamp", "desc"),
-      limit(100) // Fetch more to allow client-side filtering by deviceId
+      limit(25)
     );
 
     const unsub = onSnapshot(
       q,
       (snap: QuerySnapshot<DocumentData>) => {
-        const docs = snap.docs
-          .map((d) => docToReading(d as unknown as DocumentData & { id: string }))
-          .filter((d) => d.deviceId === deviceId);
+        const docs = snap.docs.map(
+          (d) => docToReading(d as unknown as DocumentData & { id: string })
+        );
 
         if (docs.length === 0) {
           setState({ latest: null, trend5min: null, loading: false, error: null, secondsAgo: null });

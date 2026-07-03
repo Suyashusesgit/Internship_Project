@@ -91,6 +91,7 @@ GPS_TIMEOUT = 0.01          # non-blocking serial timeout (seconds)
 POLL_INTERVAL  = 0.01       # MAX30102 polling cadence  (~100 Hz)
 PRINT_INTERVAL = 1.0        # console output cadence     (1 Hz)
 MLX_INTERVAL   = 0.5        # MLX90614 read cadence      (2 Hz)
+DSP_INTERVAL   = 1.0        # DSP recompute cadence      (1 Hz) — P4 fix
 
 SAMPLE_RATE_HZ = int(1 / POLL_INTERVAL)   # nominal ~100
 WINDOW_SIZE    = SAMPLE_RATE_HZ * 4       # 4-second analysis window (400 samples)
@@ -373,7 +374,9 @@ def init_gps():
 
 def main():
     print("=" * 64)
-    print("  T-BTN Combined Sensor Test — MAX30102 + NEO-6M GPS + MLX90614")
+    print("  T-BTN Army Dog Wearable — MAX30102 + NEO-6M GPS + MLX90614")
+    print("  Offline-first mode: data is buffered locally and uploaded")
+    print("  when internet (hotspot / 4G dongle) is available.")
     print("=" * 64)
 
     # ---- Hardware init -------------------------------------------------------
@@ -411,18 +414,26 @@ def main():
     spo2      = None        # %
     gps_lat   = None        # decimal degrees
     gps_lon   = None        # decimal degrees
+    gps_speed_kmh = None    # speed over ground (km/h) — P10
+    gps_heading   = None    # true course (degrees) — P10
     saturated = False       # True when the MAX30102 ADC is currently clipped
 
     t_last_print   = time.monotonic()
     t_last_mlx     = time.monotonic()
     t_last_publish = time.monotonic()
+    t_last_dsp     = time.monotonic()   # P4: DSP runs at 1 Hz
 
-    # ---- Initialize Firebase -----------------------------------------------
+    # ---- Initialize Firebase (offline-first) --------------------------------
+    # The new FirebaseClient always saves readings to local SQLite first, then
+    # uploads to Firestore when internet (hotspot / 4G dongle) is available.
+    # It will retry connecting to Firebase for up to 120s at boot — safe for
+    # powerbank starts where the network is slow to come up.
     try:
         from firebase_client import FirebaseClient
         firebase = FirebaseClient()
+        _firebase_ref = firebase    # P1 FIX: assign global so SIGTERM can flush
     except Exception as exc:
-        log.warning("Failed to load Firebase Client: %s", exc)
+        log.warning("Failed to load Firebase Client: %s. Running sensor-only mode.", exc)
         firebase = None
 
     gps_line_buf = ""
@@ -474,12 +485,25 @@ def main():
                             continue
                         try:
                             msg = pynmea2.parse(sentence)
+                            # GGA / RMC both carry lat/lon
                             if hasattr(msg, "latitude") and hasattr(msg, "longitude"):
                                 lat = msg.latitude
                                 lon = msg.longitude
                                 if lat != 0.0 or lon != 0.0:
                                     gps_lat = lat
                                     gps_lon = lon
+                            # P10: extract speed + heading from RMC sentences
+                            if isinstance(msg, pynmea2.types.talker.RMC):
+                                if msg.spd_over_grnd is not None:
+                                    try:
+                                        gps_speed_kmh = round(float(msg.spd_over_grnd) * 1.852, 1)
+                                    except (ValueError, TypeError):
+                                        pass
+                                if msg.true_course is not None:
+                                    try:
+                                        gps_heading = round(float(msg.true_course), 1)
+                                    except (ValueError, TypeError):
+                                        pass
                         except pynmea2.ParseError:
                             pass
                         except Exception as exc:
@@ -490,39 +514,42 @@ def main():
                 log.warning("GPS unexpected error: %s", exc)
 
         # ------------------------------------------------------------------ #
-        # 4. DSP — recompute BPM & SpO2                                       #
+        # 4. DSP — recompute BPM & SpO2 at 1 Hz (P4 fix: was 100 Hz)         #
         # ------------------------------------------------------------------ #
-        try:
-            ir_buf  = list(ox.buffer_ir)
-            red_buf = list(ox.buffer_red)
+        now = time.monotonic()
+        if now - t_last_dsp >= DSP_INTERVAL:
+            t_last_dsp = now
+            try:
+                ir_buf  = list(ox.buffer_ir)
+                red_buf = list(ox.buffer_red)
 
-            # ---- Contact detection: IR DC level drops when no finger ------
-            no_contact = (
-                len(ir_buf) > 0
-                and (sum(ir_buf) / len(ir_buf)) < NO_CONTACT_IR_THRESHOLD
-            )
+                # ---- Contact detection: IR DC level drops when no finger ------
+                no_contact = (
+                    len(ir_buf) > 0
+                    and (sum(ir_buf) / len(ir_buf)) < NO_CONTACT_IR_THRESHOLD
+                )
 
-            if no_contact:
-                # No finger on sensor — clear stale readings and smoother
-                bpm  = None
-                spo2 = None
-                saturated = False
-                bpm_smoother._history.clear()
-                bpm_smoother.value = None
-                ox.buffer_ir.clear()
-                ox.buffer_red.clear()
-            else:
-                raw_bpm, raw_spo2 = compute_bpm_spo2(ir_buf, red_buf, SAMPLE_RATE_HZ)
-                if raw_bpm == "SATURATED":
-                    saturated = True
-                    bpm = None
-                else:
+                if no_contact:
+                    # No finger on sensor — clear stale readings and smoother
+                    bpm  = None
+                    spo2 = None
                     saturated = False
-                    bpm = bpm_smoother.update(raw_bpm)
-                    if raw_spo2 is not None:
-                        spo2 = raw_spo2
-        except Exception as exc:
-            log.warning("DSP error: %s", exc)
+                    bpm_smoother._history.clear()
+                    bpm_smoother.value = None
+                    ox.buffer_ir.clear()
+                    ox.buffer_red.clear()
+                else:
+                    raw_bpm, raw_spo2 = compute_bpm_spo2(ir_buf, red_buf, SAMPLE_RATE_HZ)
+                    if raw_bpm == "SATURATED":
+                        saturated = True
+                        bpm = None
+                    else:
+                        saturated = False
+                        bpm = bpm_smoother.update(raw_bpm)
+                        if raw_spo2 is not None:
+                            spo2 = raw_spo2
+            except Exception as exc:
+                log.warning("DSP error: %s", exc)
 
         # ------------------------------------------------------------------ #
         # 5. 1 Hz console output                                              #
@@ -563,13 +590,28 @@ def main():
         if firebase is not None:
             if now - t_last_publish >= PUBLISH_INTERVAL:
                 t_last_publish = now
+
+                # P11: read Pi throttle flags for powerbank health monitoring
+                throttle_flags = -1
+                try:
+                    import subprocess
+                    out = subprocess.check_output(
+                        ["vcgencmd", "get_throttled"], text=True, timeout=1
+                    )
+                    throttle_flags = int(out.strip().split("=")[1], 16)
+                except Exception:
+                    pass  # vcgencmd not available on non-Pi hardware
+
                 data = {
-                    "deviceId": DEVICE_ID,
-                    "temp": body_temp,
-                    "bpm": bpm if not saturated else None,
-                    "spo2": spo2 if not saturated else None,
-                    "lat": gps_lat,
-                    "lon": gps_lon
+                    "deviceId":      DEVICE_ID,
+                    "temp":          body_temp,
+                    "bpm":           bpm if not saturated else None,
+                    "spo2":          spo2 if not saturated else None,
+                    "lat":           gps_lat,
+                    "lon":           gps_lon,
+                    "speedKmh":      gps_speed_kmh,    # P10: speed over ground
+                    "heading":       gps_heading,      # P10: true course
+                    "throttleFlags": throttle_flags,   # P11: 0=healthy, 0x50005=undervoltage
                 }
                 firebase.publish_reading(data)
 
@@ -586,8 +628,30 @@ def main():
 # Entry point
 # ---------------------------------------------------------------------------
 
+# Global firebase reference so the SIGTERM handler can flush the buffer.
+_firebase_ref = None
+
+
+def _handle_sigterm(signum, frame):  # noqa: ARG001
+    """
+    Called when systemd sends SIGTERM (e.g. `systemctl stop tbtn.service`).
+    Flushes any buffered readings to Firestore before exiting so no data is
+    lost when the powerbank is disconnected or the service is restarted.
+    """
+    import sys
+    print("\n[T-BTN] SIGTERM received — flushing buffer and shutting down...")
+    if _firebase_ref is not None:
+        _firebase_ref.stop()
+    sys.exit(0)
+
+
 if __name__ == "__main__":
+    import signal
+    signal.signal(signal.SIGTERM, _handle_sigterm)
+
     try:
         main()
     except KeyboardInterrupt:
-        print("\n[T-BTN] Shutdown requested — goodbye.")
+        print("\n[T-BTN] Keyboard interrupt — flushing buffer and shutting down...")
+        if _firebase_ref is not None:
+            _firebase_ref.stop()

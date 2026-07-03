@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOP: T-BTN Army Dog Health Telemetry</title>
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/night.min.css">
+    <style>
+        .reveal h1, .reveal h2, .reveal h3 {
+            color: #6366f1;
+            text-transform: none;
+        }
+        .reveal p, .reveal li {
+            font-size: 0.8em;
+            line-height: 1.4;
+            text-align: left;
+        }
+        .reveal ul {
+            display: block;
+            margin-left: 2em;
+        }
+        .highlight {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .success {
+            color: #22c55e;
+            font-weight: bold;
+        }
+        .footer-note {
+            font-size: 0.4em !important;
+            color: #888;
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- Slide 1: Title -->
+            <section>
+                <h1>Standard Operating Procedure</h1>
+                <h3>T-BTN Army Dog Health Telemetry</h3>
+                <p style="text-align: center; margin-top: 50px;">IIT Jodhpur Research Prototype</p>
+                <p style="text-align: center;">Field Deployment & Operational Guidelines</p>
+            </section>
+
+            <!-- Slide 2: Purpose & Scope -->
+            <section>
+                <h2>1. Purpose & Scope</h2>
+                <ul>
+                    <li><strong>Objective:</strong> To monitor real-time physiological vitals (BPM, SpO2, Temperature) and geolocation of military working dogs during active patrols.</li>
+                    <li><strong>Scope:</strong> Covers pre-deployment hardware checks, sensor attachment, dashboard monitoring, and emergency protocols.</li>
+                    <li><strong>Target Audience:</strong> Handlers, Veterinary Officers, and Field Technicians.</li>
+                </ul>
+            </section>
+
+            <!-- Slide 3: System Components -->
+            <section>
+                <h2>2. System Components</h2>
+                <div style="display: flex; justify-content: space-between;">
+                    <div style="width: 48%;">
+                        <h4 style="color: #a855f7;">Hardware (Edge)</h4>
+                        <ul>
+                            <li>Raspberry Pi 5</li>
+                            <li>MAX30102 (Heart Rate/SpO2)</li>
+                            <li>MLX90614 (Body Temperature)</li>
+                            <li>NEO-6M (GPS Module)</li>
+                            <li>20W USB Powerbank</li>
+                            <li>4G LTE Dongle</li>
+                        </ul>
+                    </div>
+                    <div style="width: 48%;">
+                        <h4 style="color: #a855f7;">Software (Cloud)</h4>
+                        <ul>
+                            <li>SQLite WAL (Local Buffer)</li>
+                            <li>Firebase Firestore (Database)</li>
+                            <li>Next.js Web Dashboard</li>
+                            <li>Automated Alerting System</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 4: Pre-Deployment Checks -->
+            <section>
+                <h2>3. Pre-Deployment Checks</h2>
+                <p>Before leaving the base, the technician must verify:</p>
+                <ul>
+                    <li><span class="success">Power:</span> Ensure the 20W USB Powerbank is at 100% capacity.</li>
+                    <li><span class="success">Sensors:</span> Verify I2C cables (MAX30102 on Bus 1, MLX90614 on Bus 3) and UART pins (GPS) are securely connected.</li>
+                    <li><span class="success">Connectivity:</span> Ensure the 4G LTE dongle has an active SIM card with a data plan.</li>
+                    <li><span class="success">Collar:</span> Inspect the dog collar harness for any loose wires or exposed electronics.</li>
+                </ul>
+            </section>
+
+            <!-- Slide 5: Hardware Boot Sequence -->
+            <section>
+                <h2>4. Hardware Boot Sequence</h2>
+                <ol>
+                    <li>Connect the Raspberry Pi 5 to the powerbank.</li>
+                    <li>Observe the Pi's red PWR LED (solid) and green ACT LED (blinking).</li>
+                    <li>Wait ~60 seconds for the Linux OS and <code style="color:#eab308">tbtn.service</code> systemd daemon to start.</li>
+                    <li>The system automatically initializes sensors and begins buffering data locally to SQLite.</li>
+                    <li>Wait for the 4G dongle LED to indicate an active cellular connection (usually solid blue/green).</li>
+                </ol>
+            </section>
+
+            <!-- Slide 6: Sensor Attachment -->
+            <section>
+                <h2>5. Sensor Attachment (K9)</h2>
+                <p>Proper placement is critical for accurate readings:</p>
+                <ul>
+                    <li><strong>MAX30102 (Pulse Ox):</strong> Attach to a hairless or shaved patch of skin (e.g., ear flap, groin, or specifically designed collar contact point). Keep it shielded from direct sunlight.</li>
+                    <li><strong>MLX90614 (Temp):</strong> Position the IR sensor facing the skin surface, approximately 1-2 cm away. Keep the lens clean.</li>
+                    <li><strong>NEO-6M (GPS):</strong> Ensure the ceramic antenna faces the sky on the upper harness, free from metallic obstructions.</li>
+                </ul>
+            </section>
+
+            <!-- Slide 7: Dashboard Operation -->
+            <section>
+                <h2>6. Dashboard Monitoring</h2>
+                <p>For the remote command center or veterinary officer:</p>
+                <ul>
+                    <li>Navigate to the secure Vercel deployment URL.</li>
+                    <li>Use the <strong>Device Selector</strong> (top right) to select the correct Dog ID (e.g., <code style="color:#eab308">tbtn-001</code>).</li>
+                    <li>Verify the Status Badge shows <span class="success">LIVE</span> (updates every ~15 seconds).</li>
+                    <li>Confirm GPS fix is obtained on the Leaflet map.</li>
+                </ul>
+            </section>
+
+            <!-- Slide 8: Handling Critical Alerts -->
+            <section>
+                <h2>7. Handling Critical Alerts</h2>
+                <p>If vitals cross dangerous thresholds (e.g., BPM &gt; 160, SpO2 &lt; 90%):</p>
+                <ul>
+                    <li>The dashboard will flash a <span class="highlight">pulsing red border</span>.</li>
+                    <li>An audio alarm will sound, and a browser notification will appear.</li>
+                    <li><strong>Action:</strong> Radio the handler immediately. Halt the patrol, rest the dog, and assess for heatstroke or trauma.</li>
+                    <li>Note: Readings will remain marked as "Critical" until vitals return to normal ranges.</li>
+                </ul>
+            </section>
+
+            <!-- Slide 9: Offline Data & Dead Zones -->
+            <section>
+                <h2>8. Operating in Dead Zones</h2>
+                <p>The system is designed for zero data loss:</p>
+                <ul>
+                    <li>If cellular signal is lost, the Status Badge on the dashboard will turn <strong>OFFLINE / STALE</strong>.</li>
+                    <li>The Pi will continue polling sensors and saving to the local SQLite database.</li>
+                    <li><strong>Action:</strong> No action required. When the dog returns to network coverage, the <code style="color:#eab308">firebase_client.py</code> daemon will automatically flush all buffered data to the cloud.</li>
+                </ul>
+            </section>
+
+            <!-- Slide 10: Troubleshooting & Watchdog -->
+            <section>
+                <h2>9. Emergency Troubleshooting</h2>
+                <ul>
+                    <li><strong>Dashboard Frozen:</strong> Refresh the browser. Check if the device is simply out of range.</li>
+                    <li><strong>I2C Bus Hangs:</strong> The Pi 5 is equipped with a hardware Watchdog. If the sensor polling loop deadlocks, the Watchdog will automatically forcefully reboot the Pi within 15 seconds.</li>
+                    <li><strong>Undertension Warning:</strong> If the dashboard shows a throttle flag, replace the USB powerbank immediately (voltage dropping below 4.6V).</li>
+                </ul>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Reveal.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.js"></script>
+    <script>
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            center: true,
+            hash: true,
+            transition: 'slide' // none/fade/slide/convex/concave/zoom
+        });
+    </script>
+</body>
+</html>

@@ -33,6 +33,24 @@ export default function HistoryPage() {
 
   const noData = !loading && !error && readings.length === 0;
 
+  // P9: CSV export
+  function exportCSV() {
+    if (!readings.length) return;
+    const header = "timestamp,temp_c,bpm,spo2_pct,lat,lon";
+    const rows = readings.map((r) => {
+      const ts = r.timestamp?.toDate?.()?.toISOString() ?? "";
+      return [ts, r.temp ?? "", r.bpm ?? "", r.spo2 ?? "", r.lat ?? "", r.lon ?? ""].join(",");
+    });
+    const csv = [header, ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tbtn_${deviceId}_${range}d.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="animate-fade-in">
       {/* Page header */}
@@ -52,6 +70,16 @@ export default function HistoryPage() {
             onChange={setDeviceId}
             knownDevices={KNOWN_DEVICES}
           />
+          {/* P9: CSV Export button */}
+          {readings.length > 0 && (
+            <button
+              onClick={exportCSV}
+              style={styles.exportBtn}
+              title="Export all readings as CSV"
+            >
+              ⬇ Export CSV
+            </button>
+          )}
         </div>
       </div>
 
@@ -291,6 +319,19 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     gap: "var(--space-3)",
     flexWrap: "wrap",
+  },
+  exportBtn: {
+    background: "var(--accent-dim)",
+    color: "var(--accent)",
+    border: "1px solid var(--accent-glow)",
+    borderRadius: "var(--radius-md)",
+    padding: "var(--space-2) var(--space-4)",
+    fontSize: "0.8rem",
+    fontWeight: 600,
+    fontFamily: "var(--font-sans)",
+    cursor: "pointer",
+    transition: "all var(--transition-fast)",
+    whiteSpace: "nowrap" as const,
   },
   truncateBanner: {
     display: "flex",

@@ -3,13 +3,13 @@ import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "T-BTN Dashboard — Pet Health Telemetry",
+  title: "T-BTN Dashboard — Army Dog Health Telemetry",
   description:
-    "Real-time dog health monitoring dashboard. View live vitals (temperature, BPM, SpO2) and GPS location streamed from a Raspberry Pi 5 wearable device.",
-  keywords: ["pet health", "dog telemetry", "IoT", "heart rate", "temperature", "GPS"],
+    "Real-time army dog health monitoring dashboard. View live vitals (temperature, BPM, SpO₂) and GPS location streamed from a Raspberry Pi 5 wearable device.",
+  keywords: ["army dog", "military dog", "dog telemetry", "IoT wearable", "heart rate", "temperature", "GPS tracking"],
   openGraph: {
-    title: "T-BTN Dashboard",
-    description: "Real-time dog health telemetry dashboard",
+    title: "T-BTN Army Dog Dashboard",
+    description: "Real-time army dog health telemetry — live vitals and GPS tracking",
     type: "website",
   },
 };
@@ -37,7 +37,7 @@ function Navbar() {
         <div style={styles.navBrand}>
           <PawIcon />
           <span style={styles.navTitle}>T-BTN Dashboard</span>
-          <span style={styles.navSubtitle}>Pet Health Telemetry</span>
+          <span style={{ ...styles.navSubtitle, display: "inline-block" }}>Army Dog Telemetry</span>
         </div>
         <nav style={styles.navLinks}>
           <NavLink href="/" label="Live" />
@@ -61,10 +61,10 @@ function Footer() {
     <footer style={styles.footer}>
       <div className="container" style={styles.footerInner}>
         <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>
-          T-BTN Dashboard · Real-time pet health monitoring
+          T-BTN Dashboard · Army Dog Health Telemetry
         </span>
         <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>
-          Data via Raspberry Pi 5 wearable · Firestore
+          Raspberry Pi 5 Wearable · Firebase Firestore · Vercel
         </span>
       </div>
     </footer>

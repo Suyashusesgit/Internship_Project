@@ -9,3 +9,5 @@ firebase-admin
 smbus2
 numpy
 paho-mqtt
+# sqlite3 is part of Python's standard library — no installation needed.
+# connectivity.py uses only the built-in `socket` module — no extra install.

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useLiveReading } from "@/hooks/useLiveReading";
 import {
@@ -29,6 +29,7 @@ const KNOWN_DEVICES = ["tbtn-001"];
 export default function LiveDashboard() {
   const [deviceId, setDeviceId] = useState(KNOWN_DEVICES[0]);
   const { latest, trend5min, loading, error, secondsAgo } = useLiveReading(deviceId);
+  const lastAlertedId = useRef<string | null>(null);
 
   const isStale = secondsAgo !== null && secondsAgo > 120;
 
@@ -37,10 +38,58 @@ export default function LiveDashboard() {
   const bpmT  = bpmStatus(latest?.bpm ?? null);
   const spo2T = spo2Status(latest?.spo2 ?? null);
 
+  // P7: Critical alert — browser notification + audio when any vital is critical
+  useEffect(() => {
+    if (!latest || lastAlertedId.current === latest.id) return;
+    const isCritical = tempT.status === "critical" || bpmT.status === "critical" || spo2T.status === "critical";
+    if (!isCritical) return;
+    lastAlertedId.current = latest.id;
+
+    const criticals: string[] = [];
+    if (tempT.status === "critical") criticals.push(`Temp: ${latest.temp?.toFixed(1)}°C`);
+    if (bpmT.status === "critical")  criticals.push(`BPM: ${latest.bpm}`);
+    if (spo2T.status === "critical") criticals.push(`SpO₂: ${latest.spo2}%`);
+    const message = `⚠️ CRITICAL ALERT — ${criticals.join(" | ")} — Device: ${deviceId}`;
+
+    // Browser notification
+    if ("Notification" in window) {
+      if (Notification.permission === "granted") {
+        new Notification("🐕 Army Dog Critical Alert!", { body: message, icon: "/favicon.ico", requireInteraction: true });
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then((p) => {
+          if (p === "granted") {
+            new Notification("🐕 Army Dog Critical Alert!", { body: message, icon: "/favicon.ico", requireInteraction: true });
+          }
+        });
+      }
+    }
+
+    // Audio alert (oscillator beep — no audio file needed)
+    try {
+      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.4, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+      osc.start();
+      osc.stop(ctx.currentTime + 1.2);
+    } catch {
+      // AudioContext not available in all environments
+    }
+  }, [latest, tempT.status, bpmT.status, spo2T.status, deviceId]);
+
   // Trend directions
   const tempTrend = calcTrend(latest?.temp ?? null, trend5min?.temp ?? null);
   const bpmTrend  = calcTrend(latest?.bpm  ?? null, trend5min?.bpm  ?? null);
   const spo2Trend = calcTrend(latest?.spo2 ?? null, trend5min?.spo2 ?? null);
+
+  // P7: Is there a currently active critical alert to show as an on-screen banner?
+  const hasCritical = !isStale && latest && (
+    tempT.status === "critical" || bpmT.status === "critical" || spo2T.status === "critical"
+  );
 
   return (
     <div className="animate-fade-in">
@@ -48,7 +97,7 @@ export default function LiveDashboard() {
       <div style={styles.pageHeader}>
         <div>
           <h1 style={styles.pageTitle}>Live Vitals</h1>
-          <p style={styles.pageSubtitle}>Real-time health telemetry · updates every ~15 seconds</p>
+          <p style={styles.pageSubtitle}>Army Dog Health Telemetry · updates every ~15 seconds</p>
         </div>
         <div style={styles.headerControls}>
           <StatusBadge secondsAgo={secondsAgo} loading={loading} />
@@ -59,6 +108,18 @@ export default function LiveDashboard() {
           />
         </div>
       </div>
+
+      {/* P7: Critical alert banner */}
+      {hasCritical && (
+        <div style={styles.criticalBanner}>
+          <span style={{ fontSize: "1.2rem" }}>🚨</span>
+          <strong>CRITICAL ALERT</strong> —
+          {tempT.status === "critical" && <span> Temp: {latest?.temp?.toFixed(1)}°C</span>}
+          {bpmT.status === "critical"  && <span> BPM: {latest?.bpm}</span>}
+          {spo2T.status === "critical" && <span> SpO₂: {latest?.spo2}%</span>}
+          &nbsp;— Immediate veterinary attention required!
+        </div>
+      )}
 
       {/* Loading */}
       {loading && <LoadingSpinner label="Connecting to Firestore…" />}
@@ -268,6 +329,20 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     gap: "var(--space-4)",
     flexWrap: "wrap",
+  },
+  criticalBanner: {
+    display: "flex",
+    alignItems: "center",
+    gap: "var(--space-3)",
+    padding: "var(--space-4) var(--space-5)",
+    background: "rgba(239, 68, 68, 0.12)",
+    border: "2px solid rgba(239, 68, 68, 0.6)",
+    borderRadius: "var(--radius-md)",
+    color: "var(--color-critical)",
+    fontSize: "0.9rem",
+    marginBottom: "var(--space-5)",
+    fontWeight: 600,
+    animation: "pulse-border 1s ease-in-out infinite",
   },
   staleBanner: {
     display: "flex",

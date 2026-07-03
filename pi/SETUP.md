@@ -84,8 +84,9 @@ Paste:
 
 ```ini
 [Unit]
-Description=T-BTN Wearable Sensor Service
-After=network.target
+Description=T-BTN Army Dog Wearable Sensor Service
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 ExecStart=/usr/bin/python3 /home/pi/tbtn/main.py
@@ -93,11 +94,17 @@ WorkingDirectory=/home/pi/tbtn
 StandardOutput=journal
 StandardError=journal
 Restart=always
+RestartSec=10
 User=pi
 
 [Install]
 WantedBy=multi-user.target
 ```
+
+> **Why `network-online.target`?** When the Pi boots from a powerbank it may take
+> 20–40 seconds to join the hotspot or 4G dongle. `network-online.target` makes
+> the service wait until at least one interface has an IP before starting.
+> If internet is still not available after that, the offline buffer handles it.
 
 Then enable it:
 
@@ -147,3 +154,73 @@ ssh pi@raspberrypi.local "tail -f ~/tbtn/tbtn.log"
 | RX  | GPIO 14 / TXD (Pin 8) |
 
 > Connect GPS **TX → Pi RX** and GPS **RX → Pi TX**.
+
+---
+
+## Powerbank Wiring
+
+```
+[Powerbank USB-C PD port] ──── USB-C cable (5A) ────► [Raspberry Pi 5 USB-C Power Input]
+```
+
+| Requirement | Minimum | Recommended |
+|-------------|---------|-------------|
+| Output protocol | USB-C 5V/3A (15W) | USB-C PD 5V/5A (25W) |
+| Capacity | 10,000 mAh | 20,000 mAh |
+| Cable | USB-C rated 3A | USB-C rated 5A (E-Marked) |
+
+> ⚠️ Connect to the Pi 5's **USB-C power port** (top edge), NOT the USB-A data ports.
+
+---
+
+## Connectivity (Hotspot / 4G Dongle)
+
+See **[CONNECTIVITY.md](CONNECTIVITY.md)** for step-by-step instructions on:
+- Connecting to a soldier's mobile hotspot (pre-saved, auto-connects)
+- Setting up a USB 4G LTE dongle (Huawei E3372 recommended)
+- Dual connectivity with automatic fallback
+
+---
+
+## 8 · Hardware Watchdog (P8 — prevents silent freezes)
+
+If `main.py` deadlocks on an I2C bus hang, the process stays alive but frozen.
+Systemd's `Restart=always` won't help — it only triggers when the process exits.
+The Pi hardware watchdog forces a reboot if it doesn't receive a "keep-alive" signal.
+
+```bash
+# 1. Enable watchdog daemon
+sudo systemctl enable watchdog
+sudo systemctl start watchdog
+
+# 2. Configure /etc/watchdog.conf (open with nano)
+sudo nano /etc/watchdog.conf
+```
+
+Add / uncomment these lines:
+```
+watchdog-device = /dev/watchdog
+watchdog-timeout = 15
+interval = 1
+```
+
+Then restart:
+```bash
+sudo systemctl restart watchdog
+```
+
+> The main.py script does **not** need to explicitly feed the watchdog — systemd's
+> `WatchdogSec` integration handles this automatically as long as the service
+> is reporting active. For belt-and-suspenders reliability, you can optionally
+> add `sd_notify` or a file-touch heartbeat inside the main loop.
+
+---
+
+## 9 · Check status during demo
+
+```bash
+# Run the health check from your laptop (no monitor needed):
+ssh pi@raspberrypi.local "bash ~/tbtn/health_check.sh"
+```
+
+This shows: service status, internet state, offline buffer count, recent logs, and powerbank voltage.
