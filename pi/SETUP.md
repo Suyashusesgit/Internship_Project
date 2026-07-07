@@ -66,7 +66,7 @@ python main.py
 ```
 
 You should see log output like:
-```
+```text
 2026-06-27 12:00:00 [INFO] MLX90614 ready
 2026-06-27 12:00:00 [INFO] MAX30102 ready
 2026-06-27 12:00:15 [INFO] Wrote → temp=38.2°C  bpm=92  spo2=97%  gps=(28.6139,77.2090)
@@ -152,7 +152,7 @@ ssh pi@raspberrypi.local "sudo journalctl -u tbtn.service -n 50 --no-pager"
 
 ## Powerbank Wiring
 
-```
+```text
 [Powerbank USB-C PD port] ──── USB-C cable (5A) ────► [Raspberry Pi 5 USB-C Power Input]
 ```
 
@@ -191,7 +191,7 @@ sudo nano /etc/watchdog.conf
 ```
 
 Add / uncomment these lines:
-```
+```ini
 watchdog-device = /dev/watchdog
 watchdog-timeout = 15
 interval = 1
