@@ -38,49 +38,6 @@ export default function LiveDashboard() {
   const bpmT  = bpmStatus(latest?.bpm ?? null);
   const spo2T = spo2Status(latest?.spo2 ?? null);
 
-  // P7: Critical alert — browser notification + audio when any vital is critical
-  useEffect(() => {
-    if (!latest || lastAlertedId.current === latest.id) return;
-    const isCritical = tempT.status === "critical" || bpmT.status === "critical" || spo2T.status === "critical";
-    if (!isCritical) return;
-    lastAlertedId.current = latest.id;
-
-    const criticals: string[] = [];
-    if (tempT.status === "critical") criticals.push(`Temp: ${latest.temp?.toFixed(1)}°C`);
-    if (bpmT.status === "critical")  criticals.push(`BPM: ${latest.bpm}`);
-    if (spo2T.status === "critical") criticals.push(`SpO₂: ${latest.spo2}%`);
-    const message = `⚠️ CRITICAL ALERT — ${criticals.join(" | ")} — Device: ${deviceId}`;
-
-    // Browser notification
-    if ("Notification" in window) {
-      if (Notification.permission === "granted") {
-        new Notification("🐕 Army Dog Critical Alert!", { body: message, icon: "/favicon.ico", requireInteraction: true });
-      } else if (Notification.permission !== "denied") {
-        Notification.requestPermission().then((p) => {
-          if (p === "granted") {
-            new Notification("🐕 Army Dog Critical Alert!", { body: message, icon: "/favicon.ico", requireInteraction: true });
-          }
-        });
-      }
-    }
-
-    // Audio alert (oscillator beep — no audio file needed)
-    try {
-      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.4, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
-      osc.start();
-      osc.stop(ctx.currentTime + 1.2);
-    } catch {
-      // AudioContext not available in all environments
-    }
-  }, [latest, tempT.status, bpmT.status, spo2T.status, deviceId]);
-
   // Trend directions
   const tempTrend = calcTrend(latest?.temp ?? null, trend5min?.temp ?? null);
   const bpmTrend  = calcTrend(latest?.bpm  ?? null, trend5min?.bpm  ?? null);
