@@ -72,55 +72,48 @@ You should see log output like:
 2026-06-27 12:00:15 [INFO] Wrote → temp=38.2°C  bpm=92  spo2=97%  gps=(28.6139,77.2090)
 ```
 
-## 7 · Run automatically on boot (optional)
+## 7 · Run automatically on boot
 
-To start the script every time the Pi powers on:
+A production-ready service file is already included in the repo as `tbtn.service`.
 
+**On your Mac**, copy it to the Pi:
 ```bash
-sudo nano /etc/systemd/system/tbtn.service
+scp ./pi/tbtn.service pi@raspberrypi.local:~/tbtn/tbtn.service
 ```
 
-Paste:
+**On the Pi**, install and enable it:
+```bash
+sudo cp ~/tbtn/tbtn.service /etc/systemd/system/tbtn.service
+sudo systemctl daemon-reload
+sudo systemctl enable tbtn.service
+sudo systemctl start tbtn.service
 
-```ini
-[Unit]
-Description=T-BTN Army Dog Wearable Sensor Service
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-ExecStart=/usr/bin/python3 /home/pi/tbtn/main.py
-WorkingDirectory=/home/pi/tbtn
-StandardOutput=journal
-StandardError=journal
-Restart=always
-RestartSec=10
-User=pi
-
-[Install]
-WantedBy=multi-user.target
+# Confirm it is running
+sudo systemctl status tbtn.service
 ```
+
+> **`ExecStart` uses the venv Python** (`/home/pi/tbtn/.venv/bin/python3`).
+> If you installed dependencies with a global `pip3` instead of a venv,
+> edit the `ExecStart` line in the service file to `/usr/bin/python3`.
 
 > **Why `network-online.target`?** When the Pi boots from a powerbank it may take
 > 20–40 seconds to join the hotspot or 4G dongle. `network-online.target` makes
 > the service wait until at least one interface has an IP before starting.
 > If internet is still not available after that, the offline buffer handles it.
 
-Then enable it:
+> **`WatchdogSec=15`** — systemd feeds the hardware watchdog (`/dev/watchdog`)
+> on behalf of the service. If the process deadlocks (e.g. I2C bus hang),
+> the Pi forces a hard reboot after 15 s even though the process never exited.
+> See **Section 8** to enable the watchdog daemon.
+
+## 8 · Watch live logs from your Mac (no monitor needed)
 
 ```bash
-sudo systemctl daemon-reload
-sudo systemctl enable tbtn.service
-sudo systemctl start tbtn.service
+# Stream live journal logs from the Pi
+ssh pi@raspberrypi.local "sudo journalctl -u tbtn.service -f"
 
-# Check status
-sudo systemctl status tbtn.service
-```
-
-## 8 · Watch logs from your Mac (no monitor needed)
-
-```bash
-ssh pi@raspberrypi.local "tail -f ~/tbtn/tbtn.log"
+# Or just see the last 50 lines
+ssh pi@raspberrypi.local "sudo journalctl -u tbtn.service -n 50 --no-pager"
 ```
 
 ---

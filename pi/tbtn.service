@@ -1,0 +1,40 @@
+[Unit]
+Description=T-BTN Army Dog Wearable — Sensor & Telemetry Service
+Documentation=https://github.com/Suyashusesgit/Internship_Project
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# ── Runtime identity ──────────────────────────────────────────────────────────
+User=pi
+WorkingDirectory=/home/pi/tbtn
+
+# ── Interpreter ───────────────────────────────────────────────────────────────
+# Point at the venv Python so all pip-installed packages are available.
+# If you did NOT create a venv, change this to: /usr/bin/python3
+ExecStart=/home/pi/tbtn/.venv/bin/python3 /home/pi/tbtn/main.py
+
+# ── Auto-restart on any failure ───────────────────────────────────────────────
+Restart=always
+RestartSec=10
+
+# ── Hardware watchdog integration ─────────────────────────────────────────────
+# systemd feeds /dev/watchdog on behalf of the service while it is active.
+# If the process deadlocks (e.g. I2C bus hang), the watchdog fires a hard
+# reboot after 15 s — even if the process hasn't exited.
+# Requires: sudo systemctl enable watchdog && /etc/watchdog.conf configured.
+WatchdogSec=15
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tbtn
+
+# ── Resource limits (optional, good practice) ─────────────────────────────────
+# Prevents a runaway numpy/serial bug from eating all RAM
+MemoryMax=512M
+# Cap CPU to 80% of one core (sensor loop is well within this)
+CPUQuota=80%
+
+[Install]
+WantedBy=multi-user.target
