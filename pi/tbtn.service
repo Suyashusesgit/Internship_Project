@@ -6,13 +6,14 @@ Wants=network-online.target
 
 [Service]
 # ── Runtime identity ──────────────────────────────────────────────────────────
-User=pi
-WorkingDirectory=/home/pi/tbtn
+# ⚠️  Change this to your actual Pi username (run `whoami` on the Pi to check)
+User=suyashusespi
+WorkingDirectory=/home/suyashusespi/tbtn
 
 # ── Interpreter ───────────────────────────────────────────────────────────────
 # Point at the venv Python so all pip-installed packages are available.
 # If you did NOT create a venv, change this to: /usr/bin/python3
-ExecStart=/home/pi/tbtn/.venv/bin/python3 /home/pi/tbtn/main.py
+ExecStart=/home/suyashusespi/tbtn/.venv/bin/python3 /home/suyashusespi/tbtn/main.py
 
 # ── Auto-restart on any failure ───────────────────────────────────────────────
 Restart=always
