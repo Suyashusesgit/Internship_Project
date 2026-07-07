@@ -32,6 +32,7 @@ to know the difference):
     PULSE_WIDTH_200US_ADC_13 ... PULSE_WIDTH_1600US_ADC_16
 """
 
+import collections
 import time
 import smbus2
 
@@ -251,10 +252,11 @@ class MAX30100:
         self.ir = None
         self.red = None
 
-        # Rolling software buffers
+        # Rolling software buffers (deque gives O(1) append + automatic
+        # bounded growth without mid-read mutation races under the GIL).
         self._max_buf = max_buffer_len
-        self.buffer_ir = []
-        self.buffer_red = []
+        self.buffer_ir  = collections.deque(maxlen=max_buffer_len)
+        self.buffer_red = collections.deque(maxlen=max_buffer_len)
 
     # -----------------------------------------------------------------------
     # Public methods
@@ -322,11 +324,7 @@ class MAX30100:
             self.buffer_ir.append(ir_sample)
             if red_sample is not None:
                 self.buffer_red.append(red_sample)
-
-        if len(self.buffer_ir) > self._max_buf:
-            self.buffer_ir = self.buffer_ir[-self._max_buf:]
-        if len(self.buffer_red) > self._max_buf:
-            self.buffer_red = self.buffer_red[-self._max_buf:]
+        # No manual trim needed — deque(maxlen=…) evicts oldest entries automatically.
 
     def get_temperature(self):
         """Read the on-chip die temperature (NOT body temperature)."""
@@ -390,8 +388,10 @@ class _CircuitPythonI2CShim:
         self._addr = address
 
     def write_byte_data(self, addr, register, value):
+        # time.sleep(0) yields the GIL on each failed try_lock so other
+        # threads (GPS drain, MLX read) are not starved by a busy-wait.
         while not self._i2c.try_lock():
-            pass
+            time.sleep(0)
         try:
             self._i2c.writeto(addr, bytes([register, value]))
         finally:
@@ -399,7 +399,7 @@ class _CircuitPythonI2CShim:
 
     def read_byte_data(self, addr, register):
         while not self._i2c.try_lock():
-            pass
+            time.sleep(0)
         try:
             buf = bytearray(1)
             self._i2c.writeto_then_readfrom(addr, bytes([register]), buf)
@@ -409,7 +409,7 @@ class _CircuitPythonI2CShim:
 
     def read_i2c_block_data(self, addr, register, length):
         while not self._i2c.try_lock():
-            pass
+            time.sleep(0)
         try:
             buf = bytearray(length)
             self._i2c.writeto_then_readfrom(addr, bytes([register]), buf)

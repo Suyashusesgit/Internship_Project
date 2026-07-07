@@ -57,6 +57,7 @@ DSP Pipeline for BPM & SpO2 (MAX30102)
 import time
 import collections
 import logging
+import subprocess
 
 import serial
 import pynmea2
@@ -160,7 +161,7 @@ def moving_average(signal: np.ndarray, kernel: int) -> np.ndarray:
     kernel = min(kernel, len(signal))
     cumsum = np.cumsum(np.insert(signal, 0, 0))
     ma = (cumsum[kernel:] - cumsum[:-kernel]) / kernel
-    pad = np.full(kernel - 1, ma[0] if len(ma) else 0.0)
+    pad = np.full(kernel - 1, signal[0] if len(signal) else 0.0)
     return np.concatenate([pad, ma])
 
 
@@ -282,7 +283,8 @@ class BPMSmoother:
         self.max_step = max_step
         self.alpha = alpha
         self.value = None           # EMA-smoothed BPM (float)
-        self._history = []          # rolling buffer of recent raw estimates
+        # deque evicts oldest entry automatically — no O(N) pop(0)
+        self._history = collections.deque(maxlen=self.MEDIAN_WINDOW)
 
     def update(self, new_bpm):
         """Feed a new raw BPM estimate (or None). Returns the stabilised BPM."""
@@ -291,8 +293,7 @@ class BPMSmoother:
 
         # Accumulate recent estimates for median filtering
         self._history.append(float(new_bpm))
-        if len(self._history) > self.MEDIAN_WINDOW:
-            self._history.pop(0)
+        # deque(maxlen=MEDIAN_WINDOW) handles eviction — no explicit cap needed
 
         # Use median of recent window to suppress outlier half-rate estimates
         median_bpm = sorted(self._history)[len(self._history) // 2]
@@ -477,6 +478,11 @@ def main():
                 if available:
                     raw_bytes = gps_serial.read(available)
                     gps_line_buf += raw_bytes.decode("ascii", errors="replace")
+                    # Safety cap: if no newline arrives for a long time (e.g.
+                    # garbled UART data), prevent unbounded string growth by
+                    # discarding all but the last 4096 chars.
+                    if len(gps_line_buf) > 4096:
+                        gps_line_buf = gps_line_buf[-4096:]
 
                     while "\n" in gps_line_buf:
                         sentence, gps_line_buf = gps_line_buf.split("\n", 1)
@@ -524,9 +530,12 @@ def main():
                 red_buf = list(ox.buffer_red)
 
                 # ---- Contact detection: IR DC level drops when no finger ------
+                # Reuse ir_arr (computed later in compute_bpm_spo2) by doing a
+                # fast np.mean here — avoids a redundant O(N) Python sum().
+                ir_mean_fast = np.mean(ir_buf) if len(ir_buf) > 0 else 0.0
                 no_contact = (
                     len(ir_buf) > 0
-                    and (sum(ir_buf) / len(ir_buf)) < NO_CONTACT_IR_THRESHOLD
+                    and ir_mean_fast < NO_CONTACT_IR_THRESHOLD
                 )
 
                 if no_contact:
@@ -594,7 +603,6 @@ def main():
                 # P11: read Pi throttle flags for powerbank health monitoring
                 throttle_flags = -1
                 try:
-                    import subprocess
                     out = subprocess.check_output(
                         ["vcgencmd", "get_throttled"], text=True, timeout=1
                     )
