@@ -7,7 +7,7 @@
 \usepackage{listings}
 \usepackage{geometry}
 \usepackage{xcolor}
-\usepackage{hyperref}
+\usepackage[bookmarks=false, hidelinks]{hyperref}
 \usepackage{booktabs}
 \usepackage{float}
 \usepackage{caption}
@@ -47,11 +47,12 @@
 \lstset{style=mystyle}
 
 % Improved TikZ Flowchart Styles
-\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=3.5cm, minimum height=1cm, text centered, draw=black, fill=blue!15, font=\small\bfseries]
-\tikzstyle{io} = [trapezium, trapezium left angle=75, trapezium right angle=105, minimum width=3.5cm, minimum height=1cm, text centered, draw=black, fill=yellow!20, font=\small]
-\tikzstyle{process} = [rectangle, minimum width=3.5cm, minimum height=1cm, text centered, draw=black, fill=orange!15, font=\small]
-\tikzstyle{decision} = [diamond, minimum width=3.5cm, minimum height=1.2cm, text centered, draw=black, fill=green!15, font=\small]
-\tikzstyle{arrow} = [thick,->,>=stealth]
+\usetikzlibrary{shadows}
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=4cm, minimum height=1cm, align=center, draw=black, fill=cyan!20, drop shadow, font=\small\bfseries]
+\tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=4.5cm, minimum height=1cm, align=center, text width=3.5cm, draw=black, fill=yellow!20, drop shadow, font=\small]
+\tikzstyle{process} = [rectangle, minimum width=4.5cm, minimum height=1cm, align=center, text width=4cm, draw=black, fill=orange!20, drop shadow, font=\small]
+\tikzstyle{decision} = [diamond, aspect=2, minimum width=4cm, minimum height=1cm, align=center, text width=3cm, draw=black, fill=green!20, drop shadow, font=\small]
+\tikzstyle{arrow} = [thick,->,>=stealth, rounded corners]
 
 \begin{document}
 
@@ -63,32 +64,25 @@
 % Title Page
 \begin{titlepage}
     \begin{center}
-        \vspace*{1cm}
-        \Large
+        \vspace*{0.1cm}
         \textbf{INDIAN INSTITUTE OF TECHNOLOGY JODHPUR}
         
-        \vspace{1cm}
-        \large
-        SUMMER RESEARCH INTERNSHIP 2026
+        \vspace*{0.5cm}
+        \textbf{SUMMER RESEARCH INTERNSHIP 2026}
         
-        \vspace{1.5cm}
-        % \includegraphics[width=4cm]{iitj_logo.png}
-        \vspace{1.5cm}
+        \vspace*{0.8cm}
+        \includegraphics[width=3.5cm]{iitj_logo.png}
+        \vspace*{0.8cm}
         
-        \Large
-        INTERNSHIP REPORT
+        \textbf{INTERNSHIP REPORT}
         
-        \vspace{1.5cm}
-        \Huge
+        \vspace*{1.2cm}
         \textbf{Development of an IoT-Based Smart Health and Location Monitoring System}
         
-        \vspace{1.5cm}
-        \large
-        Submitted in partial fulfillment of the requirements for the\\
-        Internship
+        \vspace*{1.5cm}
+        Submitted in partial fulfilment of the requirements for the Internship
         
-        \vspace{1.5cm}
-        \Large
+        \vspace*{1.5cm}
         By\\
         \textbf{Suyash Srivastav}\\
         B.Tech 2nd Year, Electronics and Communication Engineering (ECE)\\
@@ -96,40 +90,46 @@
         
         \vfill
         
-        \Large
         Under the Supervision of\\
-        \textbf{Dr. Akshay Moudgil, Assistant Professor}
+        \textbf{Dr. Akshay Moudgil , Assistant Professor}
         
-        \vspace{1.5cm}
-        \large
-        Department of Electrical Engineering\\
+        \vspace*{0.25cm}
+        Department of Electronics and Communication Engineering (ECE)\\
         Indian Institute of Technology Jodhpur\\
-        May--July 2026
+        May-July 2026
     \end{center}
 \end{titlepage}
 
 % Declaration
 \chapter*{Declaration}
 \addcontentsline{toc}{chapter}{Declaration}
-I hereby declare that the work presented in this internship report titled ``Development of an IoT-Based Smart Health and Location Monitoring System'' is an authentic record of the work carried out by me during my internship at the Indian Institute of Technology Jodhpur, under the guidance of Dr. Akshay Moudgil. 
+\begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=north east, inner sep=0pt, xshift=-2.5cm, yshift=-2.5cm] at (current page.north east) {\includegraphics[width=6cm]{iitj_dept_logo.png}};
+\end{tikzpicture}
 
-This project was executed in three distinct phases, involving sensor testing, ESP32 integration, and Raspberry Pi 5 setup. The work reported herein has not been submitted, in part or in full, to any other institute or university for the award of any degree or diploma. All sources of information used in this report have been duly acknowledged.
+I declare that this internship report titled ``Development of an IoT-Based Smart Health and Location Monitoring System'' is a record of my original work done during my summer internship at the Indian Institute of Technology Jodhpur, under the guidance of Dr. Akshay Moudgil. 
+
+The work presented in this report has not been submitted anywhere else for the award of any other degree or diploma. All the sources I have used or quoted have been properly acknowledged.
 \vspace{2cm}
 
 \noindent Place: Jodhpur\\
-Date: 08 July 2026 \hfill \textbf{Suyash Srivastav}
+Date: 18 July 2026 \hfill \textbf{Suyash Srivastav}
 
 % Certificate
 \chapter*{Certificate}
 \addcontentsline{toc}{chapter}{Certificate}
-This is to certify that the internship report entitled ``Development of an IoT-Based Smart Health and Location Monitoring System'' is a bona fide record of the internship work carried out by \textbf{Suyash Srivastav} at the Indian Institute of Technology Jodhpur, under my supervision, during the period May 10 to July 10, 2026.
+\begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=north east, inner sep=0pt, xshift=-2.5cm, yshift=-2.5cm] at (current page.north east) {\includegraphics[width=6cm]{iitj_dept_logo.png}};
+\end{tikzpicture}
 
-The work presented in this report is satisfactory for submission as part of the internship requirement.
+This is to certify that \textbf{Suyash Srivastav} has successfully completed his summer internship at the Indian Institute of Technology Jodhpur from May 18, 2026, to July 18, 2026, under my supervision.
+
+This report titled ``Development of an IoT-Based Smart Health and Location Monitoring System'' is a record of the original work carried out by him during this period. The report is satisfactory and is approved for submission.
 \vspace{3cm}
 
 \noindent \rule{6cm}{0.4pt}\\
 \textbf{Dr. Akshay Moudgil}\\
-Assistant Professor, Electrical Engineering Department\\
+Assistant Professor, Department of Electronics and Communication Engineering\\
 Indian Institute of Technology Jodhpur
 
 % Acknowledgement
@@ -137,7 +137,7 @@ Indian Institute of Technology Jodhpur
 \addcontentsline{toc}{chapter}{Acknowledgement}
 I would like to express my sincere gratitude to Dr. Akshay Moudgil, Assistant Professor, Indian Institute of Technology Jodhpur, for providing me the opportunity to carry out this internship. His guidance and suggestions were very helpful throughout the duration of the project.
 
-I am also thankful to the research scholars and laboratory staff of the electrical engineering department for their support during the hardware assembly and testing phases, and for granting access to the laboratory facilities required for this work.
+I am also thankful to the research scholars and laboratory staff of the Electronics and Communication Engineering (ECE) department for their support during the hardware assembly and testing phases, and for granting access to the laboratory facilities required for this work.
 
 I would further like to thank the Indian Institute of Technology Jodhpur for providing a great research environment. Finally, I extend my thanks to my family, my friends, and my home institution, Gati Shakti Vishwavidyalaya, for their continued support.
 
@@ -147,15 +147,17 @@ I would further like to thank the Indian Institute of Technology Jodhpur for pro
 % Abstract
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-This report details the development of an Internet of Things (IoT) based Smart Health and Location Monitoring System. The project was carried out in three main phases to make debugging and integration easier. 
+In this internship, I developed an Internet of Things (IoT) based Smart Health and Location Monitoring System. I broke the project down into three main phases so that testing the parts would be easier.
 
-\textbf{Phase 1} focused on testing and calibrating the individual sensors: the MAX30102 for heart rate and SpO2, the MLX90614 for body temperature, and the NEO-6M GPS module for location tracking. \textbf{Phase 2} involved integrating these sensors with an ESP32 microcontroller, which sent the data over Wi-Fi using the MQTT protocol. A web dashboard was also built using React.js and Firebase, and hosted on Vercel to view the data. \textbf{Phase 3} improved the system by upgrading the main controller to a Raspberry Pi 5 to handle more complex coding tasks. In this final phase, the circuit was moved from a breadboard to a soldered Zero PCB (perfboard) to make it more compact. A mobile app was also created using React Native (Expo Go) so users could monitor the data from their phones. 
+\textbf{Phase 1} focused on wiring up and testing the individual sensors: the MAX30102 for heart rate and SpO2, the MLX90614 for body temperature, and the NEO-6M GPS module for location tracking. 
 
-This report explains the hardware setup, the math behind the signal processing, the software logic, and the final results obtained during the internship. 
+In \textbf{Phase 2}, I connected these sensors to an ESP32 microcontroller, which pushed the sensor data over Wi-Fi using MQTT. I also built a web dashboard with React.js and Firebase and hosted it on Vercel so anyone could view the data live. 
+
+In \textbf{Phase 3}, I upgraded the main brain of the system to a Raspberry Pi 5 to handle more complex Python scripts. I also moved the messy breadboard circuit onto a soldered Zero PCB (perfboard) to make it smaller and stronger, and I built a mobile app using React Native (Expo Go) so users could check the data right from their phones.
+
+This report explains how I wired the hardware, the math I used for signal processing, how the software works, and my final results. 
 
 \tableofcontents
-\listoffigures
-\listoftables
 
 \clearpage
 % ---------------------------------------------------------
@@ -166,36 +168,32 @@ This report explains the hardware setup, the math behind the signal processing, 
 % --- CHAPTER 1 ---
 \chapter{Introduction}
 \section{Background and Motivation}
-Low-cost microcontrollers and wireless modules have made it easier to build wearable IoT devices that can monitor health and environmental conditions. People increasingly need devices that can track vital signs and geographic locations remotely. This project aims to build a practical monitoring device that can collect health data and GPS coordinates, and display them on a web or mobile dashboard.
+Tracking patient health and location in real-time is very important for elderly care and for people working in dangerous environments. While there are commercial smartwatches out there, they are usually expensive and hide all their raw data behind closed software ecosystems. 
 
-\section{Existing Solutions vs. Proposed System}
-Commercially available health monitoring devices, such as the Apple Watch or Garmin smartwatches, offer excellent physiological tracking. However, these systems come with significant drawbacks for researchers and independent developers: they are highly expensive, their internal data processing algorithms are proprietary, and they lock the user's data within closed ecosystems. 
-
-This project proposes a custom, open-architecture alternative. By building the device from off-the-shelf components, the total cost is kept low. More importantly, it provides unrestricted access to the raw sensor data, allowing for custom signal processing and full ownership of the data pipeline on Firebase.
+For this project, I decided to build a custom alternative from scratch. By using standard off-the-shelf components, I kept the cost low. More importantly, this setup gives me full access to the raw sensor data, meaning I can write my own signal processing code and own all my data on Firebase.
 
 \section{Problem Statement}
-Connecting multiple sensors (using I2C and UART protocols) to a single microcontroller requires careful wiring and programming. The device needs to read heart rate, body temperature, and location, process the data, and send it to a server. The hardware also needs to be compact enough to be worn, moving from a messy breadboard setup to a soldered PCB, and the software needs a proper user interface.
+Wiring up multiple I2C and UART sensors to one microcontroller is tricky. My goal was to read heart rate, body temperature, and location, crunch the numbers, and send it all to a web server. I also had to shrink the hardware from a bulky breadboard down to a small soldered PCB so someone could actually wear it, and I needed to build a proper app interface to show the data.
 
 \section{Project Phasing}
-To keep the development organized, the project was divided into three phases:
+To keep myself organized, I divided the work into three phases:
 \begin{enumerate}
-    \item \textbf{Phase 1:} Testing individual sensors and writing basic Arduino code.
-    \item \textbf{Phase 2:} Connecting the sensors to an ESP32, setting up MQTT, and building a Vercel web dashboard.
-    \item \textbf{Phase 3:} Upgrading to a Raspberry Pi 5, soldering the components onto a Zero PCB, and making an Expo Go mobile app.
+    \item \textbf{Phase 1:} Testing each sensor one by one and writing the basic Arduino code.
+    \item \textbf{Phase 2:} Hooking the sensors up to an ESP32, getting MQTT working, and coding a Vercel web dashboard.
+    \item \textbf{Phase 3:} Moving everything to a Raspberry Pi 5, soldering the final PCB, and building an Expo Go mobile app.
 \end{enumerate}
 
 
 % --- CHAPTER 2 ---
 \chapter{Phase 1: Sensor Testing and Characterization}
-Before putting everything together, each sensor was tested separately on a breadboard. This helped verify that the sensors worked, check their communication protocols (I2C/UART), and write the basic code for them.
+Before I wired everything together, I tested each sensor separately on a breadboard. This helped me verify that the sensors actually worked, figure out their communication protocols (I2C/UART), and write the basic starter code.
 
 \section{MAX30102 Pulse Oximeter and Heart Rate Sensor}
-The MAX30102 is a sensor module that measures heart rate and blood oxygen levels. It connects via I2C and uses photoplethysmography (PPG) to detect changes in blood volume. It gives raw optical data that is used to calculate beats per minute (BPM).
+The MAX30102~\cite{max30102} is a tiny sensor module that measures heart rate and blood oxygen levels. I connected it via I2C. It uses photoplethysmography (PPG) to detect changes in blood volume and spits out raw optical data that I used to calculate beats per minute (BPM).
 
 \begin{figure}[H]
     \centering
-    % Placeholder for MAX30102 testing image
-    \rule{0.6\textwidth}{0.3\textheight}
+    \includegraphics[width=0.7\textwidth]{max30102_test.png}
     \caption{Breadboard testing setup of the MAX30102 sensor.}
     \label{fig:max30102_test}
 \end{figure}
@@ -245,59 +243,148 @@ void loop() {
 \end{lstlisting}
 
 \section{MLX90614 Infrared Temperature Sensor}
-The MLX90614 is a non-contact infrared thermometer. It also uses I2C and reads both the surrounding room temperature and the temperature of the object it is pointed at, which is useful for checking body temperature without skin contact.
+The MLX90614~\cite{mlx90614} is a non-contact infrared thermometer that also uses I2C. It reads both the surrounding room temperature and the temperature of whatever object it's pointed at. I used this so I could check body temperature without needing it to perfectly touch the skin.
 
 \begin{figure}[H]
     \centering
     % Placeholder for MLX90614 testing image
-    \rule{0.6\textwidth}{0.3\textheight}
+    \includegraphics[width=0.7\textwidth]{mlx_test.png}
     \caption{Breadboard testing of the MLX90614 IR temperature sensor.}
     \label{fig:mlx_test}
 \end{figure}
 
+\begin{lstlisting}[language=C++, caption=Testing Code for MLX90614 (Arduino IDE)]
+#include <Wire.h>
+#include <Adafruit_MLX90614.h>
+
+Adafruit_MLX90614 mlx = Adafruit_MLX90614();
+
+void setup() {
+  Serial.begin(9600);
+  if (!mlx.begin()) {
+    Serial.println("Error connecting to MLX sensor. Check wiring.");
+    while (1);
+  };
+}
+
+void loop() {
+  Serial.print("Ambient = "); 
+  Serial.print(mlx.readAmbientTempC()); 
+  Serial.print("*C\tObject = "); 
+  Serial.print(mlx.readObjectTempC()); 
+  Serial.println("*C");
+  delay(500);
+}
+\end{lstlisting}
+
 \section{NEO-6M GPS Module}
-The NEO-6M provides standard location data (NMEA format) over a UART serial connection. The \texttt{SoftwareSerial} library was used on the microcontroller to read the latitude and longitude coordinates.
+The NEO-6M~\cite{neo6m} provides standard location data (NMEA format) over a UART serial connection. I used the \texttt{SoftwareSerial} library on the microcontroller to read the raw latitude and longitude coordinates.
 
 \begin{figure}[H]
     \centering
     % Placeholder for NEO-6M testing image
-    \rule{0.6\textwidth}{0.3\textheight}
+    \includegraphics[width=0.7\textwidth]{gps_test.png}
     \caption{Breadboard testing and satellite fix of the NEO-6M GPS module.}
     \label{fig:gps_test}
 \end{figure}
 
+\begin{lstlisting}[language=C++, caption=Testing Code for NEO-6M GPS (Arduino IDE)]
+#include <SoftwareSerial.h>
+#include <TinyGPS++.h>
+
+static const int RXPin = 4, TXPin = 3;
+static const uint32_t GPSBaud = 9600;
+
+TinyGPSPlus gps;
+SoftwareSerial ss(RXPin, TXPin);
+
+void setup() {
+  Serial.begin(115200);
+  ss.begin(GPSBaud);
+}
+
+void loop() {
+  while (ss.available() > 0) {
+    if (gps.encode(ss.read())) {
+      if (gps.location.isValid()) {
+        Serial.print("Latitude: ");
+        Serial.print(gps.location.lat(), 6);
+        Serial.print(", Longitude: ");
+        Serial.println(gps.location.lng(), 6);
+      } else {
+        Serial.println("Waiting for valid GPS lock...");}}
+  }
+}
+\end{lstlisting}
+
 % --- CHAPTER 3 ---
 \chapter{Mathematical Signal Processing}
-To get accurate heart rate and SpO2 readings from the MAX30102, the raw optical data needs to be processed using some basic math in the code.
+To actually get accurate heart rate and SpO2 readings from the MAX30102, I couldn't just read the raw optical data; I had to process it using some math in my code.
 
 \section{Photoplethysmography and the Beer-Lambert Law}
-Calculating blood oxygen (SpO2) depends on how oxygenated hemoglobin ($HbO_2$) and deoxygenated hemoglobin ($Hb$) absorb light differently. This follows the Beer-Lambert Law, which states that the absorbance $A$ of light passing through a material is:
+Calculating blood oxygen (SpO2) depends on the fact that oxygenated hemoglobin ($HbO_2$) and deoxygenated hemoglobin ($Hb$) absorb light differently. This is based on the Beer-Lambert Law~\cite{webster1997design}, which states that the absorbance $A$ of light passing through a material is:
 \begin{equation}
     A = \ln\left(\frac{I_{in}}{I_{out}}\right) = \varepsilon \cdot c \cdot d
 \end{equation}
 Here, $\varepsilon$ is how much light the blood absorbs, $c$ is the concentration of hemoglobin, and $d$ is the distance the light travels through the tissue.
 
 \section{The Ratio of Ratios Algorithm}
-Because we don't know the exact distance $d$ the light travels through the skin, the code separates the changing part of the signal (the AC component) from the steady baseline (the DC component) for both the Red and Infrared (IR) LEDs.
+Because I don't know the exact distance $d$ the light travels through the user's skin, my code separates the changing part of the pulse signal (the AC component) from the steady baseline (the DC component) for both the Red and Infrared (IR) LEDs.
 
 This gives us the "Ratio of Ratios" ($R$):
 \begin{equation}
     R = \frac{\left( \frac{AC_{red}}{DC_{red}} \right)}{\left( \frac{AC_{ir}}{DC_{ir}} \right)}
 \end{equation}
-Once $R$ is calculated in the code, a standard linear formula is used to estimate the SpO2 percentage:
+Once my code calculates $R$, I use a standard linear formula to estimate the SpO2 percentage:
 \begin{equation}
     SpO_2 (\%) = 110 - 25 \cdot R
 \end{equation}
-This calculation is done continuously on the microcontroller before any data is sent over the internet.
+I run this calculation continuously on the microcontroller before it ever sends any data over the internet.
 
 
 % --- CHAPTER 4 ---
 \chapter{Phase 2: ESP32 System Integration}
 \section{System Architecture}
-After testing the individual components, they were connected to an ESP32 microcontroller. The ESP32 reads the MAX30102 and MLX90614 using the I2C pins, and the NEO-6M GPS using the UART pins. 
+After testing the individual parts, I hooked them all up to an ESP32 microcontroller~\cite{esp32}. I programmed the ESP32 to read the MAX30102 and MLX90614 over the I2C pins, and the NEO-6M GPS over the UART pins. Figure~\ref{fig:sys_arch} shows the complete data flow from my hardware right up to the cloud.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=2.5cm, auto]
+        % Define block styles
+        \tikzstyle{sensor} = [rectangle, draw, fill=blue!10, text width=2.5cm, text centered, rounded corners, minimum height=1.2cm]
+        \tikzstyle{edge} = [rectangle, draw, fill=orange!15, text width=3cm, text centered, minimum height=1.5cm]
+        \tikzstyle{cloud} = [rectangle, draw, fill=green!15, text width=3cm, text centered, minimum height=1.5cm]
+        \tikzstyle{client} = [rectangle, draw, fill=yellow!15, text width=2.5cm, text centered, rounded corners, minimum height=1.2cm]
+        \tikzstyle{line} = [draw, -stealth, thick]
+
+        % Place nodes
+        \node [sensor] (ppg) {MAX30102\\(I2C)};
+        \node [sensor, below of=ppg, node distance=1.8cm] (mlx) {MLX90614\\(I2C)};
+        \node [sensor, below of=mlx, node distance=1.8cm] (gps) {NEO-6M\\(UART)};
+        
+        \node [edge, right of=mlx, node distance=4.5cm] (mcu) {Edge Node\\(ESP32 / Pi 5)};
+        
+        \node [cloud, right of=mcu, node distance=4.5cm] (firebase) {Google Firebase\\(MQTT / REST)};
+        
+        \node [client, right of=firebase, node distance=4.5cm, yshift=1cm] (web) {Web UI\\(Vercel)};
+        \node [client, right of=firebase, node distance=4.5cm, yshift=-1cm] (mobile) {Mobile App\\(Expo)};
+
+        % Draw edges
+        \path [line] (ppg.east) -- (mcu.west);
+        \path [line] (mlx.east) -- (mcu.west);
+        \path [line] (gps.east) -- (mcu.west);
+        
+        \path [line] (mcu.east) -- node {Wi-Fi} (firebase.west);
+        
+        \path [line] (firebase.east) -- (web.west);
+        \path [line] (firebase.east) -- (mobile.west);
+    \end{tikzpicture}
+    \caption{Overall Three-Tier IoT System Architecture Diagram.}
+    \label{fig:sys_arch}
+\end{figure}
 
 \section{Hardware Pin Mapping}
-To ensure reliable communication, the sensors were wired to the ESP32 using the specific GPIO pins listed in Table~\ref{tab:esp32_pins}.
+To make sure everything communicated properly, I wired the sensors to the ESP32 using the specific GPIO pins listed in Table~\ref{tab:esp32_pins}.
 
 \begin{table}[H]
 \centering
@@ -308,15 +395,15 @@ MAX30102 (PPG)           & SDA (I2C Data)        & GPIO 21             & 3.3V   
 MAX30102 (PPG)           & SCL (I2C Clock)       & GPIO 22             & 3.3V                 \\
 MLX90614 (Temp)          & SDA (I2C Data)        & GPIO 21             & 3.3V                 \\
 MLX90614 (Temp)          & SCL (I2C Clock)       & GPIO 22             & 3.3V                 \\
-NEO-6M (GPS)             & TX (UART Transmit)    & GPIO 16 (RX2)       & 3.3V                 \\
-NEO-6M (GPS)             & RX (UART Receive)     & GPIO 17 (TX2)       & 3.3V                 \\ \bottomrule
+NEO-6M (GPS)             & TX (UART Transmit)    & GPIO 16 (RX2)       & 5V\\
+NEO-6M (GPS)             & RX (UART Receive)     & GPIO 17 (TX2)       & 5V\\ \bottomrule
 \end{tabular}
 \caption{Hardware pin mapping for the ESP32 integration phase.}
 \label{tab:esp32_pins}
 \end{table}
 
 \section{Data Structuring and JSON Payloads}
-Before transmitting data over MQTT, the edge device packages the readings into a structured JSON (JavaScript Object Notation) format. This makes the data lightweight and easy for the web dashboard to parse. An example payload transmitted by the device is shown below:
+Before blasting data over MQTT, I wrote code on the ESP32 to package all the readings into a structured JSON (JavaScript Object Notation) format. This keeps the data lightweight and makes it super easy for the web dashboard to read. Here is an example of what the JSON payload looks like:
 
 \begin{lstlisting}[language=java, caption=Example JSON telemetry payload sent to the cloud.]
 {
@@ -335,26 +422,32 @@ Before transmitting data over MQTT, the edge device packages the readings into a
 \end{lstlisting}
 
 \section{Vercel Frontend Web Dashboard}
-A web dashboard was built to display the health and location data for the user. It was created using React.js and Node.js, and hosted on Vercel. Leaflet.js was used to show the GPS coordinates as a marker on an interactive map.
+I built a web dashboard using React.js and Node.js to display the health and location data, and I hosted it on Vercel~\cite{vercel}. I also integrated Leaflet.js to show the GPS coordinates as a live marker on an interactive map.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{vercel_dashboard.png}
+    \caption{The web dashboard displaying live health and location data, hosted on Vercel.}
+    \label{fig:vercel_dashboard}
+\end{figure}
 
 
 % --- CHAPTER 5 ---
 \chapter{Software Architecture and Execution Flow}
-To make sure the microcontroller doesn't get stuck while waiting for a network connection, a non-blocking code structure was used. Instead of using \texttt{delay()} which stops the whole program, the code checks the current time to decide if it should read a sensor or send data to the cloud.
+To make sure the microcontroller doesn't freeze up if the Wi-Fi drops, I wrote the software using a non-blocking structure. Instead of using \texttt{delay()} (which stops the whole program from doing anything), my code constantly checks the internal clock to decide exactly when it's time to read a sensor or fire off data to the cloud.
 
-The flowchart below shows the main loop running on the device.
+The flowchart below shows how I set up the main loop on the device.
 
 \begin{figure}[H]
     \centering
-    \begin{tikzpicture}[node distance=2.2cm, auto]
+    \begin{tikzpicture}[auto, scale=0.8, transform shape]
         % Nodes
         \node (start) [startstop] {Start / Initialize Hardware};
-        \node (read_i2c) [process, below of=start] {Poll I2C Sensors (MAX30102 \& MLX90614)};
-        \node (dsp) [process, below of=read_i2c] {Execute Math (SpO2 \& BPM Algorithm)};
-        \node (read_uart) [io, below of=dsp] {Read UART Buffer (NEO-6M GPS)};
-        \node (dec1) [decision, below of=read_uart, yshift=-0.5cm] {Network Connected?};
-        \node (mqtt) [process, right=1.5cm of dec1] {Send JSON Payload to Cloud};
-        \node (cache) [process, left=1.5cm of dec1] {Cache Data Locally for Later};
+        \node (read_i2c) [process, below=0.4cm of start] {Poll I2C Sensors\\(MAX30102 \& MLX90614)};
+        \node (dsp) [process, below=0.4cm of read_i2c] {Execute Math\\(SpO2 \& BPM Algorithm)};
+        \node (read_uart) [io, below=0.4cm of dsp] {Read UART Buffer\\(NEO-6M GPS)};
+        \node (dec1) [decision, below=0.4cm of read_uart] {Network\\Connected?};
+        \node (mqtt) [process, right=0.5cm of dec1] {Send JSON Payload\\to Cloud};
+        \node (cache) [process, left=0.5cm of dec1] {Cache Data Locally\\for Later};
         
         % Arrows
         \draw [arrow] (start) -- (read_i2c);
@@ -362,12 +455,12 @@ The flowchart below shows the main loop running on the device.
         \draw [arrow] (dsp) -- (read_uart);
         \draw [arrow] (read_uart) -- (dec1);
         
-        \draw [arrow] (dec1) -- node {Yes} (mqtt);
-        \draw [arrow] (dec1) -- node {No} (cache);
+        \draw [arrow] (dec1) -- node[above] {Yes} (mqtt);
+        \draw [arrow] (dec1) -- node[above] {No} (cache);
         
         % FIXED loop back paths - routing outwards first to avoid overlapping nodes
-        \draw [arrow] (mqtt.east) -- ++(0.5,0) |- (read_i2c.east);
-        \draw [arrow] (cache.west) -- ++(-0.5,0) |- (read_i2c.west);
+        \draw [arrow] (mqtt.east) -- ++(0.3,0) |- (read_i2c.east);
+        \draw [arrow] (cache.west) -- ++(-0.3,0) |- (read_i2c.west);
     \end{tikzpicture}
     \caption{Flowchart showing the main non-blocking software loop.}
     \label{fig:software_flow}
@@ -377,106 +470,178 @@ The flowchart below shows the main loop running on the device.
 % --- CHAPTER 6 ---
 \chapter{Phase 3: Raspberry Pi 5 and Mobile App Integration}
 \section{Migrating to Raspberry Pi 5}
-To handle more data and run Python code easily, the main board was changed from an ESP32 to a Raspberry Pi 5. The Pi 5 has better processing capabilities, which allows it to use Python's \texttt{asyncio} library. This means it can read sensors and send data at the same time without freezing up.
+To handle more data and run Python scripts, I swapped out the ESP32 for a Raspberry Pi 5~\cite{rpi5}. The Pi 5 is basically a full computer, which let me use Python's \texttt{asyncio} library. This was a game changer because it let me read sensors and push data to the internet simultaneously without the system freezing up.
+
+\begin{lstlisting}[language=Python, caption=Simplified Python asyncio loop for non-blocking sensor polling on the Raspberry Pi 5.]
+import asyncio
+
+async def poll_sensors():
+    while True:
+        # Read MAX30102 and MLX90614 via I2C
+        ir_val, red_val = max30102.read_fifo()
+        temp = mlx90614.get_object_temp()
+        
+        process_dsp(ir_val, red_val)
+        
+        # Yield control back to the event loop
+        await asyncio.sleep(0.01) 
+
+async def publish_telemetry():
+    while True:
+        # Publish batch data to Firebase every 15 seconds
+        if network_connected():
+            send_to_firebase(get_latest_data())
+        await asyncio.sleep(15.0)
+
+async def main():
+    # Run both tasks concurrently without multithreading
+    await asyncio.gather(poll_sensors(), publish_telemetry())
+
+if __name__ == "__main__":
+    asyncio.run(main())
+\end{lstlisting}
 
 \section{Hardware Pin Mapping (Pi 5)}
 The migration to the Raspberry Pi 5 required a new wiring layout, as shown in Table~\ref{tab:pi5_pins}. 
 
 \begin{table}[H]
 \centering
-\begin{tabular}{@{}llcc@{}}
+\begin{tabular}{@{}llll@{}}
 \toprule
-\textbf{Sensor / Module} & \textbf{Pin Function} & \textbf{Pi 5 Physical Pin} & \textbf{Pi 5 GPIO} \\ \midrule
-MAX30102 (PPG)           & SDA (I2C 1)           & Pin 3                      & GPIO 2             \\
-MAX30102 (PPG)           & SCL (I2C 1)           & Pin 5                      & GPIO 3             \\
-MLX90614 (Temp)          & SDA (I2C 1)           & Pin 3                      & GPIO 2             \\
-MLX90614 (Temp)          & SCL (I2C 1)           & Pin 5                      & GPIO 3             \\
-NEO-6M (GPS)             & TX (UART)             & Pin 10                     & GPIO 15 (RXD)      \\
-NEO-6M (GPS)             & RX (UART)             & Pin 8                      & GPIO 14 (TXD)      \\ \bottomrule
+\textbf{Physical pin} & \textbf{GPIO} & \textbf{Function} & \textbf{Connected to} \\ \midrule
+Pin 1  & 3.3V   & Power    & MAX30102 VIN \\
+Pin 2  & 5V     & Power    & NEO-6M VCC   \\
+Pin 3  & GPIO2  & I2C1 SDA & MAX30102 SDA \\
+Pin 5  & GPIO3  & I2C1 SCL & MAX30102 SCL \\
+Pin 8  & GPIO14 & UART TXD & NEO-6M RX    \\
+Pin 9  & GND    & Ground   & MAX30102 GND \\
+Pin 10 & GPIO15 & UART RXD & NEO-6M TX    \\
+Pin 14 & GND    & Ground   & NEO-6M GND   \\
+Pin 15 & GPIO22 & I2C3 SDA & MLX90614 SDA \\
+Pin 16 & GPIO23 & I2C3 SCL & MLX90614 SCL \\
+Pin 17 & 3.3V   & Power    & MLX90614 VIN \\
+Pin 20 & GND    & Ground   & MLX90614 GND \\ \bottomrule
 \end{tabular}
 \caption{Hardware pin mapping for the Raspberry Pi 5 integration phase.}
 \label{tab:pi5_pins}
 \end{table}
 
 \section{Zero PCB Fabrication and Miniaturization}
-The breadboard circuit was too bulky, so the components were soldered onto a Zero PCB (perfboard). Because the Raspberry Pi 5 uses 3.3V logic and some sensors output 5V, logic level converters (MOSFETs) were used to step down the voltage and protect the Pi's pins. The final soldered board was much smaller and more stable.
+The breadboard circuit was too bulky, so I soldered all the components onto a Zero PCB (perfboard). Because the Raspberry Pi 5 pins run on 3.3V and some of the sensors spit out 5V, I wired in some logic level converters (MOSFETs) to step down the voltage so I didn't fry the Pi. The final soldered board ended up being way smaller and a lot more stable.
 
 \begin{figure}[H]
     \centering
     % Placeholder for PCB connection image
-    \rule{0.7\textwidth}{0.35\textheight}
+    \includegraphics[width=0.7\textwidth]{pcb_layout.png}
     \caption{Soldered Zero PCB layout with hardware connections for Phase 3.}
     \label{fig:pcb_layout}
 \end{figure}
 
-\section{Expo Go Mobile Application}
-A mobile app was created using React Native and Expo Go to make it easier for users to check the data. The app connects to the Firebase database to get live updates. Expo made it simple to build the app for both Android and iOS devices, and the layout looks similar to the web dashboard.
+\section{System Power Consumption Budget}
+Since I wanted this system to be a portable wearable, I calculated a theoretical power budget for the Phase 3 hardware to guess the battery life. The Raspberry Pi 5 is a beast of an edge node and draws way more current than a tiny microcontroller.
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{@{}llcc@{}}
+\toprule
+\textbf{Component}       & \textbf{Operating Voltage} & \textbf{Estimated Current Draw} & \textbf{Power Consumption} \\ \midrule
+Raspberry Pi 5 (Idle/Load) & 5.0V                      & $\sim$600 mA (average)          & 3.0 W                      \\
+NEO-6M GPS Module          & 3.3V -- 5.0V              & $\sim$40 mA (tracking)          & 0.2 W                      \\
+MAX30102 (PPG)             & 3.3V                      & $\sim$5 mA (LEDs active)        & 0.016 W                    \\
+MLX90614 (Temp)            & 3.3V                      & $\sim$2 mA (active)             & 0.006 W                    \\ \midrule
+\textbf{Total System}      &                           & \textbf{$\sim$647 mA @ 5V}      & \textbf{$\sim$3.22 W}      \\ \bottomrule
+\end{tabular}
+}
+\caption{Theoretical power budget for the Phase 3 Raspberry Pi 5 edge node.}
+\label{tab:power_budget}
+\end{table}
+
+Assuming I use a standard 10,000 mAh (37 Wh) power bank, and factoring in a 15\% loss for voltage conversion, I calculated that the system can run continuously for about \textbf{9.7 hours} before it dies.
+
+\section{Vercel Web Dashboard Integration}
+While I did put together a basic mobile app using React Native~\cite{reactnative} and Expo Go~\cite{expo} to check data on the go, I focused most of my efforts on expanding the React.js web dashboard hosted on Vercel. I hooked the dashboard directly into the Firebase database to pull the live telemetry stream coming from the Raspberry Pi 5. Vercel made it incredibly easy to push continuous updates, allowing me to build a clean, responsive interface that tracks live heart rate, body temperature, and a real-time GPS map all on one screen.
+
+\begin{figure}[H]
+    \centering
+    % Replace 'vercel_pi_dashboard.png' with your actual image filename
+    \includegraphics[width=0.8\textwidth]{vercel_pi_dashboard.png}
+    \caption{The Vercel web dashboard showing live data streamed from the Raspberry Pi 5.}
+    \label{fig:vercel_pi_dashboard}
+\end{figure}
+
+\section{Project Links}
+The complete source code repository and a video demonstration of the working system can be found at the following links:
+\begin{itemize}
+    \item \textbf{Source Code:} \href{https://github.com/Suyashusesgit/Internship_Project}{GitHub Repository}
+    \item \textbf{Video Demonstration:} \href{https://drive.google.com/file/d/1TtXMaHDVB0Gv7fnS2fJdTBE3IKSlPMbP/view?usp=sharing}{Google Drive Link}
+\end{itemize}
 
 
 % --- CHAPTER 7 ---
 \chapter{System Challenges and Troubleshooting}
-During the project, several hardware issues came up. Here is how they were fixed.
+I ran into a few annoying hardware issues while building this. Here is how I solved them.
 
 \section{Logic Level Voltage Mismatches}
-\textbf{Challenge:} The Raspberry Pi 5 operates on 3.3V logic, but the NEO-6M GPS works better at 5V. Connecting a 5V signal directly to the Pi's RX pin can damage it. \\
-\textbf{Solution:} Bidirectional logic level shifters (using BSS138 transistors) were placed between the sensors and the Pi. This safely dropped the 5V signals down to 3.3V before they reached the Pi.
+\textbf{Challenge:} The Raspberry Pi 5 expects 3.3V logic, but the NEO-6M GPS works best when powered by 5V. If I plugged that 5V signal directly into the Pi's RX pin, it would have destroyed it. \\
+\textbf{Solution:} I wired bidirectional logic level shifters (using BSS138 transistors) between the 5V sensors and the Pi. This safely dropped the 5V signals down to 3.3V right before they hit the Pi's pins.
 
 \section{GPS Cold Start Latency}
-\textbf{Challenge:} When testing outside, the NEO-6M GPS took a long time (3 to 5 minutes) to find satellites and get a lock. \\
-\textbf{Solution:} A coin-cell battery was added to the GPS module. This kept the satellite data saved in memory when the power was off, allowing the GPS to get a "hot start" and find a lock in just a few seconds. The code was also updated to only send GPS data if it was valid.
+\textbf{Challenge:} Whenever I went outside to test, the NEO-6M GPS took way too long (3 to 5 minutes) to find satellites and get a lock. \\
+\textbf{Solution:} I soldered a coin-cell battery to the back of the GPS module. This kept the satellite data saved in its memory even when I unplugged the main power, allowing the GPS to do a "hot start" and find a lock in just a few seconds. I also added an if-statement in the code to ignore the GPS data if it hadn't found a lock yet.
 
 \section{Motion Artifacts in PPG Sensing}
-\textbf{Challenge:} The MAX30102 sensor is sensitive to movement. If the user moved around, the heart rate readings would jump to random high numbers. \\
-\textbf{Solution:} A moving average filter was added to the code to smooth out the noise. Also, a limit was set in the code to ignore any heart rate values that were physically impossible (like anything above 220 BPM).
+\textbf{Challenge:} The MAX30102 sensor is super sensitive to movement. If my finger moved around on it, the heart rate readings would jump to crazy high numbers. \\
+\textbf{Solution:} I wrote a moving average filter in my code to smooth out the noisy data. I also added a hard limit to ignore any heart rate values that were physically impossible (like anything over 220 BPM).
 
 
 % --- CHAPTER 8 ---
 \chapter{Results, Testing, and Dashboards}
 
 \section{Sensor Accuracy and Experimental Data}
-To verify the system's reliability, the sensors were tested against standard commercial devices. 
+To make sure my system was actually reliable, I tested my sensors against standard commercial devices. 
 \begin{itemize}
-    \item \textbf{Temperature Validation:} The MLX90614 readings were compared with a standard clinical digital thermometer. The sensor showed an accuracy variance of $\pm 0.3^\circ$C when placed at a 2 cm distance from the forehead.
-    \item \textbf{GPS Lock Time:} Outdoors under a clear sky, the NEO-6M achieved a "hot start" satellite lock in an average of 12 seconds thanks to the backup battery, compared to over 3 minutes on a cold start.
+    \item \textbf{Temperature Validation:} I compared my MLX90614 readings with a standard clinical digital thermometer. My sensor was usually within $\pm 0.3^\circ$C as long as I held it about 2 cm away from my forehead.
+    \item \textbf{GPS Lock Time:} When I tested it outside under a clear sky, my battery-backed NEO-6M got a "hot start" satellite lock in an average of 12 seconds, which was a huge upgrade from the 3+ minutes it took on a cold start.
 \end{itemize}
 
 \begin{figure}[H]
     \centering
     % Placeholder for a graph comparing the PPG sensor to a commercial smartwatch
-    \rule{0.7\textwidth}{0.3\textheight}
+    \includegraphics[width=0.8\textwidth]{bpm_graph.png}
     \caption{Graph comparing the custom PPG heart rate readings with a commercial smartwatch over a 60-second window.}
     \label{fig:bpm_graph}
 \end{figure}
 
 \section{Backend Database Validation}
-Data transmitted from the device was successfully received and logged in the Firebase Realtime Database. The nested JSON structure allowed for fast querying and data retrieval.
+All the data I pushed from the Pi was successfully received and logged in my Firebase Realtime Database. Using a nested JSON structure made it really fast to query and pull the data down to my apps.
 
 \begin{figure}[H]
     \centering
     % Placeholder for Firebase Screenshot
-    \rule{0.8\textwidth}{0.3\textheight}
+    \includegraphics[width=0.8\textwidth]{firebase_db.png}
     \caption{Screenshot of the Firebase Realtime Database showing live incoming JSON documents.}
     \label{fig:firebase_db}
 \end{figure}
 
 \section{Phase 2: Web Dashboard Results}
-The React.js dashboard on Vercel successfully received data from the ESP32. The interface showed the live BPM, temperature, and updated the GPS location on the Leaflet.js map without any major delays.
+My React.js dashboard on Vercel successfully pulled the live data stream. The interface showed my live BPM and temperature, and the Leaflet.js map updated my GPS location without any major lag.
 
 \begin{figure}[H]
     \centering
     % Placeholder for Phase 2 Dashboard image
-    \rule{0.8\textwidth}{0.35\textheight}
+    \includegraphics[width=0.8\textwidth]{phase2_dashboard.png}
     \caption{Phase 2: React.js Web Dashboard hosted on Vercel.}
     \label{fig:phase2_dashboard}
 \end{figure}
 
 \section{Phase 3: Mobile App and PCB Results}
-Moving to the Raspberry Pi 5 and the Zero PCB worked well. The final device size was significantly reduced compared to the breadboard version, making it much easier to carry. The Expo Go mobile app ran smoothly and displayed the live data correctly on mobile devices.
+Upgrading to the Raspberry Pi 5 and soldering the Zero PCB was definitely the right call. The final device was way smaller than the messy breadboard version, making it much easier to carry around. My Expo Go mobile app also ran super smoothly and displayed all the live data perfectly on my phone.
 
 \begin{figure}[H]
     \centering
     % Placeholder for Phase 3 Mobile Dashboard image
-    \rule{0.5\textwidth}{0.5\textheight}
+    \includegraphics[width=0.5\textwidth]{phase3_dashboard.png}
     \caption{Phase 3: React Native Mobile Application running via Expo Go.}
     \label{fig:phase3_dashboard}
 \end{figure}
@@ -485,14 +650,503 @@ Moving to the Raspberry Pi 5 and the Zero PCB worked well. The final device size
 % --- CHAPTER 9 ---
 \chapter{Conclusion and Future Scope}
 \section{Conclusion}
-This project covered the complete development of an IoT-based Smart Health and Location Monitoring System. By splitting the work into three phases, it was easier to troubleshoot issues. Phase 1 verified that all sensors worked properly. Phase 2 showed that data could be sent over Wi-Fi to a web dashboard using an ESP32. Phase 3 improved the system by using a Raspberry Pi 5, a soldered Zero PCB, and a mobile app. The internship provided good hands-on experience with sensors, microcontrollers, soldering, and software development.
+In this project, I successfully built a complete IoT-based Smart Health and Location Monitoring System from scratch. Splitting the work into three phases saved me a lot of headaches when troubleshooting. In Phase 1, I proved that all my sensors actually worked. In Phase 2, I proved I could push that data over Wi-Fi to a web dashboard using an ESP32. Finally, in Phase 3, I leveled up the whole system by migrating to a Raspberry Pi 5, soldering a custom Zero PCB, and building a mobile app. Overall, this internship gave me amazing hands-on experience with hardware wiring, microcontrollers, soldering, and full-stack software development.
 
 \section{Future Scope}
-Possible improvements for the future include:
+\enlargethispage{2\baselineskip}
+If I had more time, here are a few things I would improve:
 \begin{itemize}
-    \item \textbf{Custom PCB:} Designing and printing a proper PCB using KiCad instead of hand-soldering a perfboard, which would make the device even smaller and more reliable.
-    \item \textbf{Battery Power:} Adding a proper LiPo battery and charging circuit so the device can run on its own for hours without needing an external power bank.
-    \item \textbf{Alert System:} Adding a feature to the app that sends an email or SMS alert if the heart rate or temperature goes outside a normal range.
+    \item \textbf{Custom PCB:} Instead of hand-soldering a perfboard, I would design and print a real, professional PCB using KiCad to make the device even smaller and tougher.
+    \item \textbf{Battery Power:} I would wire in a proper LiPo battery and a charging circuit so the device could run completely on its own without me having to plug in an external power bank.
+    \item \textbf{Alert System:} I'd love to add a feature to the mobile app that automatically shoots off an email or SMS alert if someone's heart rate or temperature spikes outside the normal range.
 \end{itemize}
+
+\appendix
+\chapter{Raspberry Pi 5 Source Code (main.py)}
+The following is the complete Python source code running on the Raspberry Pi 5 edge node to handle sensor polling, signal processing, and cloud publishing.
+
+\begin{lstlisting}[language=Python]
+import time
+import collections
+import logging
+import subprocess
+
+import serial
+import pynmea2
+import board
+import busio
+import adafruit_mlx90614
+import max30100
+import numpy as np
+
+logging.basicConfig(
+    level=logging.WARNING,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+log = logging.getLogger("T-BTN")
+
+GPS_PORT = "/dev/serial0"
+GPS_BAUD = 9600
+
+PUBLISH_INTERVAL = 15.0
+DEVICE_ID = "tbtn-001"
+GPS_TIMEOUT = 0.01
+
+POLL_INTERVAL  = 0.01
+PRINT_INTERVAL = 1.0
+MLX_INTERVAL   = 0.5
+DSP_INTERVAL   = 1.0
+
+SAMPLE_RATE_HZ = int(1 / POLL_INTERVAL)
+WINDOW_SIZE    = SAMPLE_RATE_HZ * 4
+MA_KERNEL      = int(SAMPLE_RATE_HZ * 1.5)
+
+PEAK_MIN_DISTANCE     = int(SAMPLE_RATE_HZ * 0.40)
+PEAK_THRESHOLD_FACTOR = 0.25
+MIN_PULSE_AMPLITUDE   = 3.0
+
+BPM_MAX_STEP    = 20
+BPM_EMA_ALPHA   = 0.30
+
+SPO2_A = 115.0
+SPO2_B = 10.0
+
+ADC_MAX = 262143
+SATURATION_FRACTION_LIMIT = 0.3
+
+NO_CONTACT_IR_THRESHOLD = 20000
+
+DEFAULT_LED_CURRENT = max30100.LED_CURRENT_4_4MA
+
+MLX90614_I2C_BUS_NUMBER = 3
+
+def moving_average(signal: np.ndarray, kernel: int) -> np.ndarray:
+
+    if kernel < 2:
+        return signal.copy()
+    kernel = min(kernel, len(signal))
+    cumsum = np.cumsum(np.insert(signal, 0, 0))
+    ma = (cumsum[kernel:] - cumsum[:-kernel]) / kernel
+    pad = np.full(kernel - 1, signal[0] if len(signal) else 0.0)
+    return np.concatenate([pad, ma])
+
+def detect_peaks(signal: np.ndarray, min_distance: int, threshold_factor: float, min_amplitude: float = MIN_PULSE_AMPLITUDE):
+
+    if len(signal) < 3:
+        return np.array([], dtype=int)
+
+    sig_mean = np.mean(signal)
+    sig_range = np.max(signal) - np.min(signal)
+
+    if sig_range < min_amplitude:
+        return np.array([], dtype=int)
+
+    threshold = sig_mean + threshold_factor * sig_range
+
+    peaks = []
+    last_peak = -min_distance
+
+    for i in range(1, len(signal) - 1):
+        if (signal[i] > signal[i - 1]
+                and signal[i] > signal[i + 1]
+                and signal[i] > threshold
+                and (i - last_peak) >= min_distance):
+            peaks.append(i)
+            last_peak = i
+
+    return np.array(peaks, dtype=int)
+
+def compute_bpm_spo2(ir_buf: collections.deque,
+                     red_buf: collections.deque,
+                     sample_rate: float):
+
+    if len(ir_buf) < WINDOW_SIZE:
+        return None, None
+
+    ir_arr  = np.array(ir_buf,  dtype=np.float64)
+    red_arr = np.array(red_buf, dtype=np.float64)
+
+    if (np.mean(ir_arr >= ADC_MAX - 1) > SATURATION_FRACTION_LIMIT
+            or np.mean(red_arr >= ADC_MAX - 1) > SATURATION_FRACTION_LIMIT):
+        return "SATURATED", None
+
+    ir_dc  = moving_average(ir_arr,  MA_KERNEL)
+    red_dc = moving_average(red_arr, MA_KERNEL)
+
+    ir_ac  = ir_arr  - ir_dc
+    red_ac = red_arr - red_dc
+
+    lp_kernel = max(1, int(sample_rate * 0.08))
+    ir_ac = moving_average(ir_ac, lp_kernel)
+    red_ac = moving_average(red_ac, lp_kernel)
+
+    bpm = None
+    peaks = detect_peaks(ir_ac, PEAK_MIN_DISTANCE, PEAK_THRESHOLD_FACTOR)
+    log.debug("IR AC range=%.1f peaks=%d", float(np.max(ir_ac) - np.min(ir_ac)), len(peaks))
+    if len(peaks) >= 2:
+        avg_dist = np.mean(np.diff(peaks))
+        if avg_dist > 0:
+            candidate = round((sample_rate / avg_dist) * 60.0)
+            if 40 <= candidate <= 220:
+                bpm = candidate
+
+    spo2 = None
+    if bpm is not None:
+        try:
+            dc_ir  = np.mean(ir_dc)
+            dc_red = np.mean(red_dc)
+            if dc_ir > 1 and dc_red > 1:
+                ac_ir  = float(np.std(ir_ac))
+                ac_red = float(np.std(red_ac))
+                if ac_ir > 0 and ac_red > 0:
+                    R   = (ac_red / dc_red) / (ac_ir / dc_ir)
+                    val = SPO2_A - SPO2_B * R
+                    if val > 100.0:
+                        val = 100.0
+                    if 70.0 <= val <= 100.0:
+                        spo2 = round(val)
+        except ZeroDivisionError:
+            pass
+
+    return bpm, spo2
+
+class BPMSmoother:
+
+    MEDIAN_WINDOW = 9
+
+    def __init__(self, max_step=BPM_MAX_STEP, alpha=BPM_EMA_ALPHA):
+        self.max_step = max_step
+        self.alpha = alpha
+        self.value = None
+
+        self._history = collections.deque(maxlen=self.MEDIAN_WINDOW)
+
+    def update(self, new_bpm):
+
+        if new_bpm is None:
+            return round(self.value) if self.value is not None else None
+
+        self._history.append(float(new_bpm))
+
+        median_bpm = sorted(self._history)[len(self._history) // 2]
+
+        if self.value is None:
+            self.value = median_bpm
+        else:
+
+            if abs(median_bpm - self.value) > self.max_step:
+                return round(self.value)
+            self.value = (1 - self.alpha) * self.value + self.alpha * median_bpm
+
+        return round(self.value)
+
+def init_i2c_sensors():
+
+    ox = max30100.MAX30100(
+        i2c_bus=1,
+        mode=max30100.MODE_SPO2,
+        sample_rate=max30100.SAMPLE_RATE_100,
+        led_current_red=DEFAULT_LED_CURRENT,
+        led_current_ir=DEFAULT_LED_CURRENT,
+        pulse_width=max30100.PULSE_WIDTH_1600US_ADC_16,
+        max_buffer_len=WINDOW_SIZE,
+    )
+    ox.enable_spo2()
+    log.info("MAX30102 initialised at 0x57 on bus 1 (default)")
+
+    from adafruit_extended_bus import ExtendedI2C
+    i2c_bus2 = ExtendedI2C(MLX90614_I2C_BUS_NUMBER)
+    mlx = adafruit_mlx90614.MLX90614(i2c_bus2)
+    log.info("MLX90614 initialised at 0x5A on bus %d", MLX90614_I2C_BUS_NUMBER)
+
+    return mlx, ox
+
+def init_gps():
+
+    gps_serial = serial.Serial(
+        port=GPS_PORT,
+        baudrate=GPS_BAUD,
+        timeout=GPS_TIMEOUT,
+    )
+    log.info("GPS UART opened on %s @ %d baud", GPS_PORT, GPS_BAUD)
+    return gps_serial
+
+def main():
+    print("=" * 64)
+    print("  T-BTN Army Dog Wearable - MAX30102 + NEO-6M GPS + MLX90614")
+    print("  Offline-first mode: data is buffered locally and uploaded")
+    print("  when internet (hotspot / 4G dongle) is available.")
+    print("=" * 64)
+
+    try:
+        mlx, ox = init_i2c_sensors()
+        print("[OK] MAX30102 (bus 1) + MLX90614 (bus "
+              f"{MLX90614_I2C_BUS_NUMBER}) initialised")
+    except (RuntimeError, ValueError) as exc:
+        print(f"[FAIL] I2C sensor init failed: {exc}")
+        print("       For MAX30102: run `i2cdetect -y 1` and confirm 0x57 appears.")
+        print(f"       For MLX90614 on bus {MLX90614_I2C_BUS_NUMBER}: do NOT rely on")
+        print("       i2cdetect - it is documented as unreliable for this exact")
+        print("       sensor on Pi 5 even when wiring is correct (see Raspberry Pi")
+        print("       GitHub issue raspberrypi/bookworm-feedback
+        print("       is happening, double check VIN/GND/SCL/SDA wiring and the two")
+        print("       pull-up resistors on pins 15/16 instead.")
+        raise SystemExit(1) from exc
+    except Exception as exc:
+        log.error("I2C initialisation failed: %s", exc)
+        raise SystemExit(1) from exc
+
+    try:
+        gps_serial = init_gps()
+        print("[OK] GPS UART opened on", GPS_PORT)
+    except Exception as exc:
+        log.warning("GPS UART failed to open (%s) - continuing without GPS", exc)
+        print(f"[WARN] GPS UART failed to open ({exc}) - continuing without GPS")
+        gps_serial = None
+
+    bpm_smoother = BPMSmoother()
+
+    body_temp = None
+    bpm       = None
+    spo2      = None
+    gps_lat   = None
+    gps_lon   = None
+    gps_speed_kmh = None
+    gps_heading   = None
+    saturated = False
+
+    t_last_print   = time.monotonic()
+    t_last_mlx     = time.monotonic()
+    t_last_publish = time.monotonic()
+    t_last_dsp     = time.monotonic()
+
+    try:
+        from firebase_client import FirebaseClient
+        firebase = FirebaseClient()
+        _firebase_ref = firebase
+    except Exception as exc:
+        log.warning("Failed to load Firebase Client: %s. Running sensor-only mode.", exc)
+        firebase = None
+
+    gps_line_buf = ""
+
+    print("\nPlace fingertip gently on the MAX30102 sensor for BPM/SpO2.")
+    print("Sampling... (Ctrl-C to quit)\n")
+
+    while True:
+        loop_start = time.monotonic()
+
+        try:
+            ox.read_sensor()
+        except OSError as exc:
+            log.debug("MAX30102 I2C error (skipping sample): %s", exc)
+        except Exception as exc:
+            log.warning("MAX30102 unexpected error: %s", exc)
+
+        now = time.monotonic()
+        if now - t_last_mlx >= MLX_INTERVAL:
+            t_last_mlx = now
+            try:
+                body_temp = round(mlx.object_temperature, 1)
+            except OSError as exc:
+                log.debug("MLX90614 I2C error: %s", exc)
+            except Exception as exc:
+                log.warning("MLX90614 unexpected error: %s", exc)
+
+        if gps_serial is not None:
+            try:
+                available = gps_serial.in_waiting
+                if available:
+                    raw_bytes = gps_serial.read(available)
+                    gps_line_buf += raw_bytes.decode("ascii", errors="replace")
+
+                    if len(gps_line_buf) > 4096:
+                        gps_line_buf = gps_line_buf[-4096:]
+
+                    while "\n" in gps_line_buf:
+                        sentence, gps_line_buf = gps_line_buf.split("\n", 1)
+                        sentence = sentence.strip()
+                        if not sentence:
+                            continue
+                        try:
+                            msg = pynmea2.parse(sentence)
+
+                            if hasattr(msg, "latitude") and hasattr(msg, "longitude"):
+                                lat = msg.latitude
+                                lon = msg.longitude
+                                if lat != 0.0 or lon != 0.0:
+                                    gps_lat = lat
+                                    gps_lon = lon
+
+                            if isinstance(msg, pynmea2.types.talker.RMC):
+                                if msg.spd_over_grnd is not None:
+                                    try:
+                                        gps_speed_kmh = round(float(msg.spd_over_grnd) * 1.852, 1)
+                                    except (ValueError, TypeError):
+                                        pass
+                                if msg.true_course is not None:
+                                    try:
+                                        gps_heading = round(float(msg.true_course), 1)
+                                    except (ValueError, TypeError):
+                                        pass
+                        except pynmea2.ParseError:
+                            pass
+                        except Exception as exc:
+                            log.debug("NMEA parse error: %s", exc)
+            except serial.SerialException as exc:
+                log.warning("GPS serial error: %s", exc)
+            except Exception as exc:
+                log.warning("GPS unexpected error: %s", exc)
+
+        now = time.monotonic()
+        if now - t_last_dsp >= DSP_INTERVAL:
+            t_last_dsp = now
+            try:
+                ir_buf  = list(ox.buffer_ir)
+                red_buf = list(ox.buffer_red)
+
+                ir_mean_fast = np.mean(ir_buf) if len(ir_buf) > 0 else 0.0
+                no_contact = (
+                    len(ir_buf) > 0
+                    and ir_mean_fast < NO_CONTACT_IR_THRESHOLD
+                )
+
+                if no_contact:
+
+                    bpm  = None
+                    spo2 = None
+                    saturated = False
+                    bpm_smoother._history.clear()
+                    bpm_smoother.value = None
+                    ox.buffer_ir.clear()
+                    ox.buffer_red.clear()
+                else:
+                    raw_bpm, raw_spo2 = compute_bpm_spo2(ir_buf, red_buf, SAMPLE_RATE_HZ)
+                    if raw_bpm == "SATURATED":
+                        saturated = True
+                        bpm = None
+                    else:
+                        saturated = False
+                        bpm = bpm_smoother.update(raw_bpm)
+                        if raw_spo2 is not None:
+                            spo2 = raw_spo2
+            except Exception as exc:
+                log.warning("DSP error: %s", exc)
+
+        now = time.monotonic()
+        if now - t_last_print >= PRINT_INTERVAL:
+            t_last_print = now
+
+            temp_str = f"{body_temp:.1f}*C" if body_temp is not None else "---*C"
+
+            if gps_lat is not None and gps_lon is not None:
+                gps_str = f"{gps_lat:.4f}, {gps_lon:.4f}"
+            else:
+                gps_str = "No Fix"
+
+            if saturated:
+                ir_now  = ox.ir  if ox.ir  is not None else 0
+                red_now = ox.red if ox.red is not None else 0
+                print(
+                    f"Temp: {temp_str} | "
+                    f"BPM: SATURATED (raw IR:{ir_now} RED:{red_now}) | "
+                    f"GPS: {gps_str}"
+                )
+            else:
+                bpm_str  = str(bpm)  if bpm  is not None else "---"
+                spo2_str = str(spo2) if spo2 is not None else "---"
+
+                ir_mean = sum(list(ox.buffer_ir)) / len(ox.buffer_ir) if len(ox.buffer_ir) > 0 else 0
+                print(
+                    f"Temp: {temp_str} | "
+                    f"BPM: {bpm_str} (SpO2: {spo2_str}%) | "
+                    f"GPS: {gps_str} | IR: {ir_mean:.0f}"
+                )
+
+        if firebase is not None:
+            if now - t_last_publish >= PUBLISH_INTERVAL:
+                t_last_publish = now
+
+                throttle_flags = -1
+                try:
+                    out = subprocess.check_output(
+                        ["vcgencmd", "get_throttled"], text=True, timeout=1
+                    )
+                    throttle_flags = int(out.strip().split("=")[1], 16)
+                except Exception:
+                    pass
+
+                data = {
+                    "deviceId":      DEVICE_ID,
+                    "temp":          body_temp,
+                    "bpm":           bpm if not saturated else None,
+                    "spo2":          spo2 if not saturated else None,
+                    "lat":           gps_lat,
+                    "lon":           gps_lon,
+                    "speedKmh":      gps_speed_kmh,
+                    "heading":       gps_heading,
+                    "throttleFlags": throttle_flags,
+                }
+                firebase.publish_reading(data)
+
+        elapsed = time.monotonic() - loop_start
+        sleep_for = POLL_INTERVAL - elapsed
+        if sleep_for > 0:
+            time.sleep(sleep_for)
+
+_firebase_ref = None
+
+def _handle_sigterm(signum, frame):
+
+    import sys
+    print("\n[T-BTN] SIGTERM received - flushing buffer and shutting down...")
+    if _firebase_ref is not None:
+        _firebase_ref.stop()
+    sys.exit(0)
+
+if __name__ == "__main__":
+    import signal
+    signal.signal(signal.SIGTERM, _handle_sigterm)
+
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n[T-BTN] Keyboard interrupt - flushing buffer and shutting down...")
+        if _firebase_ref is not None:
+            _firebase_ref.stop()
+\end{lstlisting}
+
+\newpage
+\addcontentsline{toc}{chapter}{References}
+\begin{thebibliography}{99}
+
+\bibitem{webster1997design}
+J.~G. Webster, \textit{Design of Pulse Oximeters}. Bristol, UK: Institute of Physics Publishing, 1997.
+
+\bibitem{max30102}
+Maxim Integrated, \textit{MAX30102: High-Sensitivity Pulse Oximeter and Heart-Rate Sensor for Wearable Health}, Datasheet. [Online]. Available: \url{https://www.analog.com/media/en/technical-documentation/data-sheets/max30102.pdf}
+
+\bibitem{mlx90614}
+Melexis, \textit{MLX90614 Family: Single and Dual Zone Infra Red Thermometer in TO-39}, Datasheet. [Online]. Available: \url{https://www.melexis.com/-/media/files/documents/datasheets/mlx90614-datasheet-melexis.pdf}
+
+\bibitem{neo6m}
+u-blox, \textit{NEO-6 u-blox 6 GPS Modules}, Data Sheet. [Online]. Available: \url{https://www.u-blox.com/sites/default/files/products/documents/NEO-6_DataSheet_(GPS.G6-HW-09005).pdf}
+
+\bibitem{esp32}
+Espressif Systems, \textit{ESP32 Series Datasheet}. [Online]. Available: \url{https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf}
+
+\bibitem{rpi5}
+Raspberry Pi Ltd, \textit{Raspberry Pi 5 Product Brief}. [Online]. Available: \url{https://datasheets.raspberrypi.com/rpi5/raspberry-pi-5-product-brief.pdf}
+
+\bibitem{reactnative}
+Meta Platforms, Inc., \textit{React Native Documentation}. [Online]. Available: \url{https://reactnative.dev/}
+
+\bibitem{expo}
+Expo, \textit{Expo Documentation}. [Online]. Available: \url{https://docs.expo.dev/}
+
+\bibitem{vercel}
+Vercel Inc., \textit{Vercel Documentation}. [Online]. Available: \url{https://vercel.com/docs}
+
+\end{thebibliography}
 
 \end{document}
